@@ -5,6 +5,7 @@ import { UnauthorizedError } from '../lib/errors.js'
 export interface AuthPayload {
   userId: string
   email: string
+  onboardingComplete?: boolean
 }
 
 export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
