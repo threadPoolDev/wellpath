@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/authStore'
 import { ROUTES } from '@/constants'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { LoginPage } from '@/features/auth/components/LoginPage'
 import { RegisterPage } from '@/features/auth/components/RegisterPage'
 import { AuthCallback } from '@/features/auth/components/AuthCallback'
@@ -11,11 +12,15 @@ import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute'
 import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow'
 import { MorningCheckin } from '@/features/checkin/MorningCheckin'
 import { Dashboard } from '@/features/dashboard/Dashboard'
+import { SettingsPage } from '@/features/settings/SettingsPage'
+import { GroupsPage } from '@/features/groups/GroupsPage'
 
 const queryClient = new QueryClient()
 
 function AppRoutes() {
   const initialize = useAuthStore((s) => s.initialize)
+  const user = useAuthStore((s) => s.user)
+  usePushNotifications(!!user)
 
   useEffect(() => {
     initialize()
@@ -53,11 +58,11 @@ function AppRoutes() {
       />
       <Route
         path={ROUTES.GROUPS}
-        element={<ProtectedRoute><div className="p-8">Groups — coming in PR #18</div></ProtectedRoute>}
+        element={<ProtectedRoute><GroupsPage /></ProtectedRoute>}
       />
       <Route
         path={ROUTES.SETTINGS}
-        element={<ProtectedRoute><div className="p-8">Settings — coming in PR #16</div></ProtectedRoute>}
+        element={<ProtectedRoute><SettingsPage /></ProtectedRoute>}
       />
 
       {/* Default */}

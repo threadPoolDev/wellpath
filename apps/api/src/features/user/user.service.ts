@@ -2,8 +2,10 @@ import { UploadApiResponse } from 'cloudinary'
 import { cloudinary } from '../../lib/cloudinary.js'
 import { ValidationError, NotFoundError } from '../../lib/errors.js'
 import { PROFILE_PHOTO } from '../../constants/index.js'
-import { setProfilePhoto, clearProfilePhoto, findById } from './user.repository.js'
+import { setProfilePhoto, clearProfilePhoto, findById, updateProfile } from './user.repository.js'
 import { ProfilePhotoResponse } from './user.types.js'
+import { IUser } from './user.model.js'
+import { embedUserProfile } from '../embeddings/embeddings.service.js'
 
 export async function uploadProfilePhoto(
   userId: string,
@@ -53,6 +55,74 @@ export async function uploadProfilePhoto(
     publicId: updated.profilePhoto.publicId,
     uploadedAt: updated.profilePhoto.uploadedAt.toISOString(),
   }
+}
+
+export async function getProfile(userId: string): Promise<IUser> {
+  const user = await findById(userId)
+  if (!user) throw new NotFoundError('User not found')
+  return user
+}
+
+export interface UpdateProfileDto {
+  name?: string
+  workMode?: string
+  workShift?: string
+  sleep?: { wakeTime?: string; sleepGoal?: number }
+  exercise?: { preference?: string }
+  focus?: { peakWindow?: string }
+  diet?: { type?: string; waterReminderNeeded?: boolean; restrictions?: string }
+  medicines?: Array<{
+    nameOrNickname: string
+    timings: string[]
+    withFood: string
+    isCritical: string
+    reminderEnabled: boolean
+  }>
+  groupSharingDefaults?: {
+    defaultSharingPreference?: string
+    shareWithGroups?: boolean
+  }
+}
+
+export async function updateUserProfile(userId: string, dto: UpdateProfileDto): Promise<IUser> {
+  const fields: Record<string, unknown> = {}
+
+  if (dto.name !== undefined) fields['name'] = dto.name
+  if (dto.workMode !== undefined) fields['profile.workMode'] = dto.workMode
+  if (dto.workShift !== undefined) fields['profile.workShift'] = dto.workShift
+
+  if (dto.sleep) {
+    if (dto.sleep.wakeTime !== undefined) fields['profile.sleep.wakeTime'] = dto.sleep.wakeTime
+    if (dto.sleep.sleepGoal !== undefined) fields['profile.sleep.sleepGoal'] = dto.sleep.sleepGoal
+  }
+  if (dto.exercise?.preference !== undefined) fields['profile.exercise.preference'] = dto.exercise.preference
+  if (dto.focus?.peakWindow !== undefined) fields['profile.focus.peakWindow'] = dto.focus.peakWindow
+
+  if (dto.diet) {
+    if (dto.diet.type !== undefined) fields['profile.diet.type'] = dto.diet.type
+    if (dto.diet.waterReminderNeeded !== undefined) fields['profile.diet.waterReminderNeeded'] = dto.diet.waterReminderNeeded
+    if (dto.diet.restrictions !== undefined) fields['profile.diet.restrictions'] = dto.diet.restrictions
+  }
+  if (dto.medicines !== undefined) fields['profile.health.medicines'] = dto.medicines
+
+  if (dto.groupSharingDefaults) {
+    if (dto.groupSharingDefaults.defaultSharingPreference !== undefined) {
+      fields['groupSharingDefaults.defaultSharingPreference'] = dto.groupSharingDefaults.defaultSharingPreference
+    }
+    if (dto.groupSharingDefaults.shareWithGroups !== undefined) {
+      fields['groupSharingDefaults.shareWithGroups'] = dto.groupSharingDefaults.shareWithGroups
+    }
+  }
+
+  const updated = await updateProfile(userId, fields)
+  if (!updated) throw new NotFoundError('User not found')
+
+  // Re-embed profile in background when non-medical fields change
+  embedUserProfile(userId).catch((err) =>
+    console.error('[embeddings] profile re-embedding failed after update:', err)
+  )
+
+  return updated
 }
 
 export async function deleteProfilePhoto(userId: string): Promise<void> {

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { getTodayRoutine, markTaskStatus } from './routine.service.js'
+import { getTodayRoutine, markTaskStatus, addAdHocMeeting, markMeetingEndedEarly } from './routine.service.js'
 import { recordTaskCheckin } from '../checkin/checkin.service.js'
 import { sendSuccess } from '../../lib/response.js'
 
@@ -27,7 +27,6 @@ export async function updateTaskStatus(req: Request, res: Response, next: NextFu
       didInstead,
     })
 
-    // Record in checkins collection — fire-and-forget, non-blocking
     recordTaskCheckin(req.user!.userId, routineId, taskId, status, {
       missedReason,
       didInstead,
@@ -35,6 +34,34 @@ export async function updateTaskStatus(req: Request, res: Response, next: NextFu
     }).catch((err) => console.error('[routine] Failed to save task checkin:', err))
 
     sendSuccess(res, { routine })
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function addMeeting(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { routineId } = req.params as { routineId: string }
+    const { title, startTime, durationMinutes } = req.body as {
+      title: string
+      startTime: string
+      durationMinutes: number
+    }
+    const routine = await addAdHocMeeting(req.user!.userId, routineId, { title, startTime, durationMinutes })
+    sendSuccess(res, { routine })
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function endMeeting(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { routineId, meetingId } = req.params as { routineId: string; meetingId: string }
+    const { actualEndTime } = req.body as { actualEndTime: string }
+    const { routine, freeMinutesGained } = await markMeetingEndedEarly(
+      req.user!.userId, routineId, meetingId, actualEndTime
+    )
+    sendSuccess(res, { routine, freeMinutesGained })
   } catch (err) {
     next(err)
   }

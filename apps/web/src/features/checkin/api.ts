@@ -30,4 +30,12 @@ export const checkinApi = {
     const res = await apiClient.get<{ data: { submitted: boolean; date: string } }>('/checkin/morning/status')
     return res.data.data
   },
+
+  async submitEvening(routineId: string, payload: {
+    overallRating: number
+    howWasYourDay?: string
+    tomorrowNote?: string
+  }): Promise<void> {
+    await apiClient.post('/checkin/evening', { routineId, ...payload })
+  },
 }

@@ -26,6 +26,7 @@ export interface IRoutineTask {
 }
 
 export interface IRoutineMeeting {
+  _id: Types.ObjectId
   calendarEventId?: string
   isAdHoc: boolean
   title: string
@@ -72,21 +73,18 @@ const routineTaskSchema = new Schema<IRoutineTask>({
   taskEmbedding: [Number],
 })
 
-const routineMeetingSchema = new Schema<IRoutineMeeting>(
-  {
-    calendarEventId: String,
-    isAdHoc: { type: Boolean, default: false },
-    title: { type: String, required: true },
-    startTime: { type: String, required: true },
-    endTime: { type: String, required: true },
-    durationMinutes: { type: Number, required: true },
-    priorityLevel: { type: String, enum: MEETING_PRIORITY_LEVELS, default: 'unset' },
-    actualEndTime: String,
-    endedEarly: { type: Boolean, default: false },
-    freeMinutesGained: Number,
-  },
-  { _id: false }
-)
+const routineMeetingSchema = new Schema<IRoutineMeeting>({
+  calendarEventId: String,
+  isAdHoc: { type: Boolean, default: false },
+  title: { type: String, required: true },
+  startTime: { type: String, required: true },
+  endTime: { type: String, required: true },
+  durationMinutes: { type: Number, required: true },
+  priorityLevel: { type: String, enum: MEETING_PRIORITY_LEVELS, default: 'unset' },
+  actualEndTime: String,
+  endedEarly: { type: Boolean, default: false },
+  freeMinutesGained: Number,
+})
 
 const routineSchema = new Schema<IRoutine>(
   {

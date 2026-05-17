@@ -2,10 +2,12 @@ import { getAIClient } from '../../lib/ai.js'
 import { AI_PROVIDERS, TASK_CATEGORIES } from '../../constants/index.js'
 import { User, IUser } from '../user/user.model.js'
 import { getEventsForDay } from '../calendar/calendar.service.js'
-import { findRoutineByDate, saveRoutine, updateTaskStatus } from './routine.repository.js'
+import { findRoutineByDate, saveRoutine, updateTaskStatus, addMeetingToRoutine, endMeetingEarly } from './routine.repository.js'
 import { IRoutine, IRoutineTask } from './routine.model.js'
 import { NotFoundError, ValidationError } from '../../lib/errors.js'
 import { Types } from 'mongoose'
+import { scheduleNotificationsForRoutine, scheduleMorningCheckinReminder } from '../notifications/notification.service.js'
+import { computeUserActivityForToday } from '../groups/groups.service.js'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -234,7 +236,74 @@ export async function generateRoutine(userId: string, date: string): Promise<IRo
     generatedAt: new Date(),
   })
 
+  // Schedule push notifications — fire-and-forget so AI latency is not affected
+  scheduleNotificationsForRoutine(savedRoutine).catch((err) =>
+    console.error('[routine] notification scheduling failed:', err)
+  )
+
+  scheduleMorningCheckinReminder(userId, String(savedRoutine._id), date, workStart).catch((err) =>
+    console.error('[routine] morning checkin reminder failed:', err)
+  )
+
   return savedRoutine
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function addMinutes(time: string, minutes: number): string {
+  const [h, m] = time.split(':').map(Number)
+  const total = h * 60 + m + minutes
+  return `${String(Math.floor(total / 60) % 24).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
+}
+
+function diffMinutes(from: string, to: string): number {
+  const [fh, fm] = from.split(':').map(Number)
+  const [th, tm] = to.split(':').map(Number)
+  return (th * 60 + tm) - (fh * 60 + fm)
+}
+
+// ─── Ad-hoc meetings ──────────────────────────────────────────────────────────
+
+export async function addAdHocMeeting(
+  userId: string,
+  routineId: string,
+  dto: { title: string; startTime: string; durationMinutes: number }
+): Promise<IRoutine> {
+  const routine = await findRoutineByDate(userId, new Date().toISOString().slice(0, 10))
+  if (!routine || String(routine._id) !== routineId) throw new NotFoundError('Routine not found')
+  if (String(routine.userId) !== userId) throw new ValidationError('Forbidden')
+
+  const endTime = addMinutes(dto.startTime, dto.durationMinutes)
+  const updated = await addMeetingToRoutine(routineId, {
+    isAdHoc: true,
+    title: dto.title,
+    startTime: dto.startTime,
+    endTime,
+    durationMinutes: dto.durationMinutes,
+    priorityLevel: 'unset',
+    endedEarly: false,
+  })
+  if (!updated) throw new NotFoundError('Routine not found')
+  return updated
+}
+
+export async function markMeetingEndedEarly(
+  userId: string,
+  routineId: string,
+  meetingId: string,
+  actualEndTime: string
+): Promise<{ routine: IRoutine; freeMinutesGained: number }> {
+  const routine = await findRoutineByDate(userId, new Date().toISOString().slice(0, 10))
+  if (!routine || String(routine._id) !== routineId) throw new NotFoundError('Routine not found')
+  if (String(routine.userId) !== userId) throw new ValidationError('Forbidden')
+
+  const meeting = routine.meetings.find((m) => String(m._id) === meetingId)
+  if (!meeting) throw new NotFoundError('Meeting not found')
+
+  const freeMinutesGained = Math.max(0, diffMinutes(actualEndTime, meeting.endTime))
+  const updated = await endMeetingEarly(routineId, meetingId, actualEndTime, freeMinutesGained)
+  if (!updated) throw new NotFoundError('Routine not found')
+  return { routine: updated, freeMinutesGained }
 }
 
 export async function getTodayRoutine(userId: string): Promise<IRoutine | null> {
@@ -255,5 +324,11 @@ export async function markTaskStatus(
   })
   if (!routine) throw new NotFoundError('Routine or task not found')
   if (String(routine.userId) !== userId) throw new ValidationError('Forbidden')
+
+  // Update group activity projection — fire-and-forget
+  computeUserActivityForToday(userId).catch((err) =>
+    console.error('[groups] activity computation failed:', err)
+  )
+
   return routine
 }

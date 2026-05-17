@@ -11,6 +11,8 @@ import { router } from './router.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { globalRateLimiter } from './middleware/rateLimiter.js'
 import { openapiSpec } from './docs/openapi.js'
+import { startNotificationWorker } from './lib/queue.js'
+import { configureWebPush, processNotificationJob } from './features/notifications/notification.service.js'
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -66,8 +68,11 @@ app.use('/api', router)
 app.use(errorHandler)
 
 // ─── Startup ──────────────────────────────────────────────────────────────────
+configureWebPush()
+
 connectDB()
   .then(() => {
+    startNotificationWorker(processNotificationJob)
     app.listen(PORT, () => {
       console.log(`WellPath API running on port ${PORT} [${process.env.NODE_ENV ?? 'development'}]`)
     })

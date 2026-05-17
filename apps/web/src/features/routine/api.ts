@@ -13,6 +13,19 @@ export interface RoutineTask {
   didInstead?: string
 }
 
+export interface RoutineMeeting {
+  _id: string
+  isAdHoc: boolean
+  title: string
+  startTime: string
+  endTime: string
+  durationMinutes: number
+  priorityLevel: 'high' | 'passive' | 'unset'
+  actualEndTime?: string
+  endedEarly: boolean
+  freeMinutesGained?: number
+}
+
 export interface Routine {
   _id: string
   date: string
@@ -24,6 +37,7 @@ export interface Routine {
     mood: string
     submittedAt: string
   }
+  meetings: RoutineMeeting[]
   tasks: RoutineTask[]
 }
 
@@ -44,5 +58,28 @@ export const routineApi = {
       { status, ...extras }
     )
     return res.data.data.routine
+  },
+
+  async addMeeting(
+    routineId: string,
+    dto: { title: string; startTime: string; durationMinutes: number }
+  ): Promise<Routine> {
+    const res = await apiClient.post<{ data: { routine: Routine } }>(
+      `/routine/${routineId}/meetings`,
+      dto
+    )
+    return res.data.data.routine
+  },
+
+  async endMeetingEarly(
+    routineId: string,
+    meetingId: string,
+    actualEndTime: string
+  ): Promise<{ routine: Routine; freeMinutesGained: number }> {
+    const res = await apiClient.patch<{ data: { routine: Routine; freeMinutesGained: number } }>(
+      `/routine/${routineId}/meetings/${meetingId}/end-early`,
+      { actualEndTime }
+    )
+    return res.data.data
   },
 }

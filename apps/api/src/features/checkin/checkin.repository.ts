@@ -43,6 +43,20 @@ export async function saveMorningCheckin(
   ) as Promise<IRoutine>
 }
 
+export async function createEveningSummary(
+  userId: string,
+  routineId: string,
+  summary: { overallRating: number; howWasYourDay?: string; tomorrowNote?: string }
+): Promise<ICheckin> {
+  return Checkin.create({
+    userId: new Types.ObjectId(userId),
+    routineId: new Types.ObjectId(routineId),
+    type: 'evening_summary',
+    eveningSummary: summary,
+    timestamp: new Date(),
+  })
+}
+
 export async function createTaskCheckin(
   userId: string,
   routineId: string,

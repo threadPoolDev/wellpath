@@ -1,9 +1,10 @@
 import { ValidationError } from '../../lib/errors.js'
 import { ENERGY_LEVELS, MOOD_OPTIONS, DAY_TYPES } from '../../constants/index.js'
 import { getEventsForDay } from '../calendar/calendar.service.js'
-import { saveMorningCheckin, findTodayRoutine, createTaskCheckin } from './checkin.repository.js'
+import { saveMorningCheckin, findTodayRoutine, createTaskCheckin, createEveningSummary } from './checkin.repository.js'
 import { MorningCheckinDto, MorningCheckinResponse } from './checkin.types.js'
 import { generateRoutine } from '../routine/routine.service.js'
+import { embedCheckin } from '../embeddings/embeddings.service.js'
 
 function todayDate(): string {
   return new Date().toISOString().slice(0, 10)
@@ -72,7 +73,32 @@ export async function recordTaskCheckin(
   extras: { missedReason?: string; didInstead?: string; shareWithGroup?: boolean } = {}
 ): Promise<void> {
   const type = status === 'done' ? 'task_completion' : 'task_missed'
-  await createTaskCheckin(userId, routineId, taskId, type, status, extras)
+  const checkin = await createTaskCheckin(userId, routineId, taskId, type, status, extras)
+
+  // Embed free-text fields if present — fire-and-forget
+  if (extras.missedReason || extras.didInstead) {
+    embedCheckin(String(checkin._id)).catch((err) =>
+      console.error('[embeddings] checkin embedding failed:', err)
+    )
+  }
+}
+
+export async function submitEveningSummary(
+  userId: string,
+  routineId: string,
+  dto: { overallRating: number; howWasYourDay?: string; tomorrowNote?: string }
+): Promise<void> {
+  if (dto.overallRating < 1 || dto.overallRating > 5) {
+    throw new ValidationError('Rating must be between 1 and 5')
+  }
+
+  const checkin = await createEveningSummary(userId, routineId, dto)
+
+  if (dto.howWasYourDay || dto.tomorrowNote) {
+    embedCheckin(String(checkin._id)).catch((err) =>
+      console.error('[embeddings] evening summary embedding failed:', err)
+    )
+  }
 }
 
 export async function getTodayCheckinStatus(

@@ -8,6 +8,7 @@ import {
   markSessionComplete,
 } from './onboarding.repository.js'
 import { SaveResponseDto, CompleteOnboardingDto, OnboardingSessionResponse } from './onboarding.types.js'
+import { embedUserProfile } from '../embeddings/embeddings.service.js'
 import { IOnboardingResponse } from './onboardingResponse.model.js'
 
 export async function saveResponse(userId: string, dto: SaveResponseDto): Promise<void> {
@@ -47,6 +48,11 @@ export async function completeOnboarding(
 
   await User.updateOne({ _id: userId }, { $set: updateFields })
   await markSessionComplete(session)
+
+  // Embed profile in background — does not block onboarding completion response
+  embedUserProfile(userId).catch((err) =>
+    console.error('[embeddings] profile embedding failed after onboarding:', err)
+  )
 }
 
 function buildProfileUpdate(session: IOnboardingResponse): Record<string, unknown> {

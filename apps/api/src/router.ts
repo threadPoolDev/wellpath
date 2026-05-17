@@ -6,6 +6,8 @@ import { travelRouter } from './features/travel/travel.routes.js'
 import { calendarRouter } from './features/calendar/calendar.routes.js'
 import { checkinRouter } from './features/checkin/checkin.routes.js'
 import { routineRouter } from './features/routine/routine.routes.js'
+import { notificationsRouter } from './features/notifications/notification.routes.js'
+import { groupsRouter } from './features/groups/groups.routes.js'
 
 const router = Router()
 
@@ -37,12 +39,12 @@ router.use('/checkin', checkinRouter)
 router.use('/routine', routineRouter)
 
 // PR #13 — feat/desktop-notifications
-// router.use('/notifications', notificationsRouter)
+router.use('/notifications', notificationsRouter)
 
 // PR #16 — feat/settings
 // router.use('/settings', settingsRouter)
 
 // PR #17 — feat/groups-backend
-// router.use('/groups', groupsRouter)
+router.use('/groups', groupsRouter)
 
 export { router }

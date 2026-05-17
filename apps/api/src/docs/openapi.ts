@@ -118,7 +118,8 @@ export const openapiSpec: OpenAPIV3.Document = {
     { name: 'Travel',      description: 'Commute time estimation' },
     { name: 'Calendar',    description: 'Google / Microsoft calendar connect & sync' },
     { name: 'Check-in',    description: 'Morning check-in' },
-    { name: 'Routine',     description: 'Daily routine & task status' },
+    { name: 'Routine',       description: 'Daily routine & task status' },
+    { name: 'Notifications', description: 'Web Push subscription management' },
   ],
 
   paths: {
@@ -710,6 +711,130 @@ export const openapiSpec: OpenAPIV3.Document = {
           '401': r401,
           '404': r404,
           '422': r422,
+        },
+      },
+    },
+
+    '/routine/{routineId}/meetings': {
+      post: {
+        tags: ['Routine'],
+        summary: 'Add an ad-hoc meeting to today\'s routine',
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: 'routineId', in: 'path', required: true, schema: { type: 'string' } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['title', 'startTime', 'durationMinutes'],
+                properties: {
+                  title:           { type: 'string', example: 'Quick sync with Priya' },
+                  startTime:       { type: 'string', example: '15:30', description: 'HH:MM 24-hour' },
+                  durationMinutes: { type: 'number', example: 30 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Updated routine with meeting added. totalMeetingMinutes and totalFreeMinutes recalculated.',
+            content: { 'application/json': { schema: SuccessWrapper({ type: 'object', properties: { routine: Routine } }) } },
+          },
+          '401': r401,
+          '404': r404,
+        },
+      },
+    },
+
+    '/routine/{routineId}/meetings/{meetingId}/end-early': {
+      patch: {
+        tags: ['Routine'],
+        summary: 'Mark a meeting as ended early — recalculates free time',
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: 'routineId',  in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'meetingId',  in: 'path', required: true, schema: { type: 'string' } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['actualEndTime'],
+                properties: {
+                  actualEndTime: { type: 'string', example: '15:45', description: 'HH:MM 24-hour' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Updated routine and minutes freed',
+            content: {
+              'application/json': {
+                schema: SuccessWrapper({
+                  type: 'object',
+                  properties: {
+                    routine:          { ...Routine },
+                    freeMinutesGained: { type: 'number', example: 15 },
+                  },
+                }),
+              },
+            },
+          },
+          '401': r401,
+          '404': r404,
+        },
+      },
+    },
+
+    '/notifications/subscribe': {
+      post: {
+        tags: ['Notifications'],
+        summary: 'Save push subscription',
+        description: 'Stores the browser Web Push subscription so the server can deliver notifications.',
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['endpoint', 'keys'],
+                properties: {
+                  endpoint: { type: 'string', example: 'https://fcm.googleapis.com/fcm/send/...' },
+                  keys: {
+                    type: 'object',
+                    required: ['p256dh', 'auth'],
+                    properties: {
+                      p256dh: { type: 'string' },
+                      auth:   { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': { description: 'Subscription saved', content: { 'application/json': { schema: SuccessWrapper({ type: 'object', properties: { subscribed: { type: 'boolean' } } }) } } },
+          '401': r401,
+        },
+      },
+      delete: {
+        tags: ['Notifications'],
+        summary: 'Remove push subscription',
+        description: 'Unsubscribes the current user from push notifications.',
+        security: [{ cookieAuth: [] }],
+        responses: {
+          '204': { description: 'Subscription removed' },
+          '401': r401,
         },
       },
     },
