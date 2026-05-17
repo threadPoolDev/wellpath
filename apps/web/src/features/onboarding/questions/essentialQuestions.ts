@@ -9,6 +9,7 @@ export type QuestionType =
   | 'medicine_form'
   | 'calendar_connect'
   | 'photo_upload'
+  | 'commute_duration'
 
 export interface SelectOption {
   value: string
@@ -235,6 +236,49 @@ export const essentialQuestions: OnboardingQuestion[] = [
     weight: 6,
     skippable: true,
     showIf: (a) => a.work_mode !== 'wfh',
+  },
+
+  // ─── Q5b: Home Area ──────────────────────────────────────────────────────────
+  {
+    id: 'home_area',
+    layer: 'essential',
+    category: 'Your Commute',
+    text: 'Which area do you live in?',
+    subtext: 'Neighbourhood or locality — not your full address.',
+    type: 'text_input',
+    weight: 4,
+    skippable: false,
+    showIf: (a) => a.work_mode !== 'wfh',
+  },
+
+  // ─── Q5c: Office Area ─────────────────────────────────────────────────────────
+  {
+    id: 'office_area',
+    layer: 'essential',
+    category: 'Your Commute',
+    text: 'And where is your office?',
+    subtext: 'Area or locality is enough.',
+    type: 'text_input',
+    weight: 4,
+    skippable: false,
+    showIf: (a) => a.work_mode !== 'wfh',
+  },
+
+  // ─── Q5d: Commute Duration ────────────────────────────────────────────────────
+  {
+    id: 'commute_duration',
+    layer: 'essential',
+    category: 'Your Commute',
+    text: "How long is your commute?",
+    subtext: "We'll look it up for you — just confirm or adjust.",
+    type: 'commute_duration',
+    weight: 4,
+    skippable: true,
+    showIf: (a) =>
+      a.work_mode !== 'wfh' &&
+      !!a.commute_mode &&
+      !!a.home_area &&
+      !!a.office_area,
   },
 
   // ─── Q6a: Work Start Time ────────────────────────────────────────────────────

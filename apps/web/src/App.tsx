@@ -9,6 +9,7 @@ import { AuthCallback } from '@/features/auth/components/AuthCallback'
 import { GuestRoute } from '@/features/auth/components/GuestRoute'
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute'
 import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow'
+import { MorningCheckin } from '@/features/checkin/MorningCheckin'
 
 const queryClient = new QueryClient()
 
@@ -40,6 +41,9 @@ function AppRoutes() {
 
       {/* Onboarding — requires auth, redirects to dashboard if already complete */}
       <Route path={ROUTES.ONBOARDING} element={<ProtectedRoute><OnboardingFlow /></ProtectedRoute>} />
+
+      {/* Morning check-in */}
+      <Route path="/checkin/morning" element={<ProtectedRoute><MorningCheckin /></ProtectedRoute>} />
 
       {/* Protected routes */}
       <Route

@@ -2,6 +2,9 @@ import { Router } from 'express'
 import { authRouter } from './features/auth/auth.routes.js'
 import { onboardingRouter } from './features/onboarding/onboarding.routes.js'
 import { userRouter } from './features/user/user.routes.js'
+import { travelRouter } from './features/travel/travel.routes.js'
+import { calendarRouter } from './features/calendar/calendar.routes.js'
+import { checkinRouter } from './features/checkin/checkin.routes.js'
 
 const router = Router()
 
@@ -14,6 +17,9 @@ router.use('/onboarding', onboardingRouter)
 // PR #5 — feat/profile-photo
 router.use('/user', userRouter)
 
+// PR #6 — feat/travel-time
+router.use('/travel', travelRouter)
+
 // PR #5 — feat/profile-photo
 // router.use('/user', userRouter)
 
@@ -21,10 +27,10 @@ router.use('/user', userRouter)
 // router.use('/travel', travelRouter)
 
 // PR #7 — feat/calendar-integration
-// router.use('/calendar', calendarRouter)
+router.use('/calendar', calendarRouter)
 
 // PR #8 — feat/morning-checkin
-// router.use('/checkin', checkinRouter)
+router.use('/checkin', checkinRouter)
 
 // PR #9 — feat/ai-routine-engine
 // router.use('/routine', routineRouter)

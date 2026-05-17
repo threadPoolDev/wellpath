@@ -1,4 +1,8 @@
+import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { getCalendarConnections, ConnectedCalendar } from '@/features/calendar/api'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL as string
 
 interface CalendarConnectAnswerProps {
   value: string | null
@@ -33,28 +37,63 @@ const providers = [
 ]
 
 export function CalendarConnectAnswer({ value, onChange }: CalendarConnectAnswerProps) {
+  const [connections, setConnections] = useState<ConnectedCalendar[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getCalendarConnections()
+      .then((connected) => {
+        setConnections(connected)
+        if (connected.length > 0 && !value) {
+          // Auto-set answer to the first connected provider so Continue is enabled
+          onChange(connected[0].provider)
+        }
+      })
+      .catch(() => null)
+      .finally(() => setLoading(false))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const isConnected = (provider: string) => connections.some((c) => c.provider === provider)
+
+  const handleConnect = (provider: string) => {
+    window.location.href = `${API_BASE}/calendar/connect/${provider}`
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <span className="h-5 w-5 animate-spin rounded-full border-2 border-sage-400 border-t-transparent" />
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-3 w-full max-w-sm mx-auto">
-      {providers.map((p) => (
-        <button
-          key={p.value}
-          type="button"
-          onClick={() => onChange(p.value)}
-          className={cn(
-            'w-full px-5 py-4 rounded-2xl text-base font-medium border-2 text-left',
-            'transition-all duration-150 flex items-center gap-3',
-            value === p.value
-              ? 'bg-sage-100 border-sage-500 text-sage-800'
-              : 'bg-white border-stone-200 text-stone-700 hover:border-sage-300 hover:bg-sage-50'
-          )}
-        >
-          {p.icon}
-          <span>{p.label}</span>
-          {value === p.value && (
-            <span className="ml-auto text-sage-500 text-sm">✓</span>
-          )}
-        </button>
-      ))}
+      {providers.map((p) => {
+        const connected = isConnected(p.value)
+        return (
+          <button
+            key={p.value}
+            type="button"
+            onClick={() => (connected ? onChange(p.value) : handleConnect(p.value))}
+            className={cn(
+              'w-full px-5 py-4 rounded-2xl text-base font-medium border-2 text-left',
+              'transition-all duration-150 flex items-center gap-3',
+              connected
+                ? 'bg-sage-100 border-sage-500 text-sage-800'
+                : 'bg-white border-stone-200 text-stone-700 hover:border-sage-300 hover:bg-sage-50'
+            )}
+          >
+            {p.icon}
+            <span className="flex-1">{p.label}</span>
+            {connected ? (
+              <span className="text-sage-600 text-sm font-semibold shrink-0">Connected ✓</span>
+            ) : (
+              <span className="text-stone-400 text-xs shrink-0">Connect →</span>
+            )}
+          </button>
+        )
+      })}
 
       <div className="relative flex items-center gap-2 py-1">
         <div className="flex-1 h-px bg-stone-100" />
@@ -77,7 +116,7 @@ export function CalendarConnectAnswer({ value, onChange }: CalendarConnectAnswer
         <div>
           <p className="font-medium text-stone-700">Connect later from Settings</p>
           <p className="text-xs text-stone-400 font-normal mt-0.5">
-            We'll remind you on your home screen — you won't miss it
+            {"We'll remind you on your home screen — you won't miss it"}
           </p>
         </div>
         {value === 'later' && (

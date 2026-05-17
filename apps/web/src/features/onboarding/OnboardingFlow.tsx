@@ -15,6 +15,7 @@ import { TextAnswer } from './components/answers/TextAnswer'
 import { MedicineFormAnswer } from './components/answers/MedicineFormAnswer'
 import { CalendarConnectAnswer } from './components/answers/CalendarConnectAnswer'
 import { PhotoUploadAnswer } from './components/answers/PhotoUploadAnswer'
+import { CommuteDurationAnswer, CommuteDurationValue } from './components/answers/CommuteDurationAnswer'
 
 const SESSION_ID_KEY = 'onboarding_session_id'
 
@@ -39,12 +40,17 @@ function hasValidAnswer(question: OnboardingQuestion, answers: Record<string, un
   if (value === undefined || value === null || value === '') return false
   if (question.type === 'multi_select' && Array.isArray(value)) return value.length > 0
   if (question.type === 'medicine_form' && Array.isArray(value)) return value.length > 0
+  if (question.type === 'commute_duration') {
+    return typeof value === 'object' && value !== null && 'durationMinutes' in (value as object)
+  }
   return true
 }
 
 export function OnboardingFlow() {
   const navigate = useNavigate()
-  const { initialize } = useAuthStore()
+  const { initialize, user } = useAuthStore()
+  const prefillName = user?.name ?? null
+  const prefillPhoto = user?.profilePhoto?.url ?? null
 
   const [sessionId] = useState(getOrCreateSessionId)
   const [answers, setAnswers] = useState<Record<string, unknown>>({})
@@ -55,9 +61,17 @@ export function OnboardingFlow() {
   // Restore session on mount
   useEffect(() => {
     onboardingApi.getSession().then((session) => {
-      if (!session || session.completedLayer) return
-
       const restored: Record<string, unknown> = {}
+
+      // Pre-fill name and photo from the authenticated user's profile (e.g. Google sign-in)
+      if (prefillName) restored['name'] = prefillName
+      if (prefillPhoto) restored['photo'] = prefillPhoto
+
+      if (!session || session.completedLayer) {
+        setAnswers(restored)
+        return
+      }
+
       for (const r of session.responses) {
         restored[r.questionId] = r.answerValue
       }
@@ -69,7 +83,7 @@ export function OnboardingFlow() {
         if (idx >= 0) setCurrentIndex(idx)
       }
     })
-  }, [])
+  }, [prefillName, prefillPhoto])
 
   const activeQuestions = essentialQuestions.filter(
     (q) => !q.showIf || q.showIf(answers)
@@ -256,6 +270,16 @@ export function OnboardingFlow() {
       {currentQuestion.type === 'medicine_form' && (
         <MedicineFormAnswer
           value={(currentValue as MedicineEntry[]) ?? []}
+          onChange={updateAnswer}
+        />
+      )}
+
+      {currentQuestion.type === 'commute_duration' && (
+        <CommuteDurationAnswer
+          home={(answers['home_area'] as string) ?? ''}
+          office={(answers['office_area'] as string) ?? ''}
+          mode={(answers['commute_mode'] as string) ?? 'car'}
+          value={(currentValue as CommuteDurationValue) ?? null}
           onChange={updateAnswer}
         />
       )}

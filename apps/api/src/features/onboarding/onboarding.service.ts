@@ -78,8 +78,22 @@ function buildProfileUpdate(session: IOnboardingResponse): Record<string, unknow
     fields['profile.cityType'] = isMetro ? 'metro' : 'tier2'
   }
 
+  if (answered.has('home_area')) {
+    fields['profile.homeAddress'] = answered.get('home_area')
+  }
+
+  if (answered.has('office_area')) {
+    fields['profile.officeAddress'] = answered.get('office_area')
+  }
+
   if (answered.has('commute_mode')) {
     fields['profile.commute.mode'] = answered.get('commute_mode')
+  }
+
+  if (answered.has('commute_duration')) {
+    const val = answered.get('commute_duration') as { durationMinutes: number; overridden: boolean }
+    fields['profile.commute.homeToOfficeDuration'] = val.durationMinutes
+    fields['profile.commute.travelTimeOverridden'] = val.overridden
   }
 
   if (answered.has('work_start_time')) {

@@ -38,6 +38,7 @@ export function configurePassport(): void {
               authProvider: 'google',
               accessToken: _accessToken,
               refreshToken: _refreshToken,
+              avatarUrl: profile.photos?.[0]?.value,
             })
             done(null, user)
           } catch (err) {

@@ -18,6 +18,7 @@ export interface OAuthProfileDto {
   authProvider: 'google' | 'microsoft'
   accessToken: string
   refreshToken?: string
+  avatarUrl?: string
 }
 
 // ─── Response ─────────────────────────────────────────────────────────────────

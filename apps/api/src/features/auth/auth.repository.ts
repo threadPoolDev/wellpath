@@ -33,6 +33,16 @@ export const authRepository = {
       passwordHash: null,
       authProvider: dto.authProvider,
       isWorkEmail: dto.isWorkEmail,
+      ...(dto.avatarUrl
+        ? {
+            profilePhoto: {
+              url: dto.avatarUrl,
+              thumbnailUrl: dto.avatarUrl,
+              publicId: '',
+              uploadedAt: new Date(),
+            },
+          }
+        : {}),
     })
   },
 }
