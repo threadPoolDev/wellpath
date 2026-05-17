@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import { ROUTES } from '@/constants'
@@ -9,6 +9,7 @@ interface Props {
 
 export function ProtectedRoute({ children }: Props) {
   const { user, isInitialized } = useAuthStore()
+  const location = useLocation()
 
   if (!isInitialized) {
     return (
@@ -19,7 +20,16 @@ export function ProtectedRoute({ children }: Props) {
   }
 
   if (!user) return <Navigate to={ROUTES.LOGIN} replace />
-  if (!user.onboardingComplete) return <Navigate to={ROUTES.ONBOARDING} replace />
+
+  // Onboarding complete but trying to reach /onboarding via history → dashboard
+  if (user.onboardingComplete && location.pathname === ROUTES.ONBOARDING) {
+    return <Navigate to={ROUTES.DASHBOARD} replace />
+  }
+
+  // Onboarding not complete and trying to reach any other protected route → onboarding
+  if (!user.onboardingComplete && location.pathname !== ROUTES.ONBOARDING) {
+    return <Navigate to={ROUTES.ONBOARDING} replace />
+  }
 
   return <>{children}</>
 }

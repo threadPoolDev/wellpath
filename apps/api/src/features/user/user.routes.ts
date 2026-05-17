@@ -1,0 +1,15 @@
+import { Router } from 'express'
+import multer from 'multer'
+import { requireAuth } from '../../middleware/requireAuth.js'
+import { uploadProfilePhoto, deleteProfilePhoto } from './user.controller.js'
+import { PROFILE_PHOTO } from '../../constants/index.js'
+
+export const userRouter = Router()
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: PROFILE_PHOTO.MAX_FILE_SIZE_BYTES },
+})
+
+userRouter.post('/profile-photo', requireAuth, upload.single('photo'), uploadProfilePhoto)
+userRouter.delete('/profile-photo', requireAuth, deleteProfilePhoto)

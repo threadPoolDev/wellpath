@@ -6,7 +6,9 @@ import { ROUTES } from '@/constants'
 import { LoginPage } from '@/features/auth/components/LoginPage'
 import { RegisterPage } from '@/features/auth/components/RegisterPage'
 import { AuthCallback } from '@/features/auth/components/AuthCallback'
+import { GuestRoute } from '@/features/auth/components/GuestRoute'
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute'
+import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow'
 
 const queryClient = new QueryClient()
 
@@ -17,14 +19,27 @@ function AppRoutes() {
     initialize()
   }, [initialize])
 
+  // Re-run auth check when the browser restores a page from the back-forward cache.
+  // Without this, bfcache snapshots bypass GuestRoute and ProtectedRoute entirely.
+  useEffect(() => {
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) initialize()
+    }
+    window.addEventListener('pageshow', handlePageShow)
+    return () => window.removeEventListener('pageshow', handlePageShow)
+  }, [initialize])
+
   return (
     <Routes>
-      <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-      <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+      {/* Guest-only routes — redirect authenticated users away */}
+      <Route path={ROUTES.LOGIN} element={<GuestRoute><LoginPage /></GuestRoute>} />
+      <Route path={ROUTES.REGISTER} element={<GuestRoute><RegisterPage /></GuestRoute>} />
+
+      {/* OAuth callback — handled by AuthCallback which navigates after /me */}
       <Route path="/auth/callback" element={<AuthCallback />} />
 
-      {/* Onboarding — built in PR #4 */}
-      <Route path={ROUTES.ONBOARDING} element={<div className="p-8">Onboarding — coming in PR #4</div>} />
+      {/* Onboarding — requires auth, redirects to dashboard if already complete */}
+      <Route path={ROUTES.ONBOARDING} element={<ProtectedRoute><OnboardingFlow /></ProtectedRoute>} />
 
       {/* Protected routes */}
       <Route

@@ -1,10 +1,18 @@
 import { Router } from 'express'
 import { authRouter } from './features/auth/auth.routes.js'
+import { onboardingRouter } from './features/onboarding/onboarding.routes.js'
+import { userRouter } from './features/user/user.routes.js'
 
 const router = Router()
 
 // PR #3 — feat/auth
 router.use('/auth', authRouter)
+
+// PR #4 — feat/onboarding
+router.use('/onboarding', onboardingRouter)
+
+// PR #5 — feat/profile-photo
+router.use('/user', userRouter)
 
 // PR #5 — feat/profile-photo
 // router.use('/user', userRouter)

@@ -41,7 +41,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await authApi.logout()
     } finally {
-      set({ user: null })
+      set({ user: null, isInitialized: true })
     }
   },
 }))
