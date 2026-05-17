@@ -33,3 +33,7 @@ export async function clearProfilePhoto(userId: string) {
 export async function updateProfile(userId: string, fields: Record<string, unknown>) {
   return User.findByIdAndUpdate(userId, { $set: fields }, { new: true })
 }
+
+export async function findByEmail(email: string) {
+  return User.findOne({ email: email.toLowerCase().trim() }).select('_id name')
+}

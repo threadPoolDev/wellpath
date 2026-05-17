@@ -50,6 +50,23 @@ function buildPrompt(
       ? medicineAnchors.map((a) => `  - ${a}`).join('\n')
       : '  (None)'
 
+  const homeToOfficeDuration = profile?.commute?.homeToOfficeDuration ?? 0
+  const officeToHomeDuration = profile?.commute?.officeToHomeDuration ?? 0
+  const commuteMode = profile?.commute?.mode ?? 'none'
+
+  // Departure time = workStart - travel time (so user arrives at workStart)
+  const departureTime = homeToOfficeDuration > 0
+    ? minToTime(timeToMin(workStart) - homeToOfficeDuration)
+    : null
+
+  const commuteBlock = (workMode === 'office' || workMode === 'hybrid') && homeToOfficeDuration > 0
+    ? `Commute (mode: ${commuteMode}):
+  - Morning: depart home at ${departureTime}, travel ${homeToOfficeDuration} min, arrive at work at ${workStart}
+    → Schedule category "commute" task at time "${departureTime}", durationMinutes ${homeToOfficeDuration}
+  - Evening: depart work at ${workEnd}, travel ${officeToHomeDuration > 0 ? officeToHomeDuration : homeToOfficeDuration} min home
+    → Schedule category "commute" task at time "${workEnd}", durationMinutes ${officeToHomeDuration > 0 ? officeToHomeDuration : homeToOfficeDuration}`
+    : '  (None — WFH or no commute data)'
+
   // NOTE: medicine names are deliberately excluded from this prompt
   return `You are WellPath, an AI that creates warm, realistic daily routines for busy people.
 
@@ -59,6 +76,8 @@ User profile:
   Work mode: ${workMode}
   Peak energy window: ${peakWindow}
   Work hours: ${workStart} – ${workEnd}
+
+${commuteBlock}
 
 Today (${dayEvents.date}):
   Energy: ${checkin.energyLevel}
@@ -83,9 +102,12 @@ Rules:
 1. Never schedule tasks during calendar events
 2. Include fixed anchors at their exact times with category "medicine"
 3. Match energy level: low → shorter focus blocks, lighter tasks; high → longer deep work
-4. Always include: morning hydration, lunch, at least one break, wind-down before end of day
-5. Keep commmute tasks if work mode is office or hybrid
-6. Respond with ONLY a valid JSON array — no explanation, no markdown fences`
+4. Always include: morning hydration, lunch (category "nutrition") between 12:00 and 14:00, at least one break, wind-down before end of day
+5. CRITICAL: If commute data is provided above, include BOTH commute legs with the EXACT time and durationMinutes specified — never use 0 for commute duration
+6. CRITICAL: Never schedule focus_work, exercise, or learning tasks before ${workStart} — that is the work start time
+7. CRITICAL: Never create a single focus_work block longer than 3 hours (180 minutes). If more deep work is needed, split into two blocks with a break or meal in between
+8. CRITICAL: Tasks must not overlap. Each task's end time (time + durationMinutes) must be before or equal to the start time of the next task
+9. Respond with ONLY a valid JSON array — no explanation, no markdown fences`
 }
 
 // ─── AI call + parse ──────────────────────────────────────────────────────────
@@ -139,16 +161,170 @@ function buildMedicineAnchors(user: IUser): { anchors: string[]; tasks: AITask[]
   return { anchors, tasks }
 }
 
+// ─── Time helpers ─────────────────────────────────────────────────────────────
+
+function timeToMin(t: string): number {
+  const [h, m] = t.split(':').map(Number)
+  return h * 60 + m
+}
+
+function minToTime(min: number): string {
+  const clamped = Math.max(0, Math.min(min, 23 * 60 + 59))
+  return `${String(Math.floor(clamped / 60)).padStart(2, '0')}:${String(clamped % 60).padStart(2, '0')}`
+}
+
+// ─── Overlap resolution ───────────────────────────────────────────────────────
+// Long "splittable" tasks (focus_work, learning, exercise) that overlap with
+// shorter fixed tasks (nutrition, medicine, break) are split around them.
+// Non-splittable tasks that overlap are trimmed to start after the previous task.
+
+const SPLITTABLE_CATEGORIES = new Set(['focus_work', 'learning', 'exercise'])
+const MIN_BLOCK_MINUTES = 15
+
+function resolveOverlapsAndSplit(tasks: AITask[]): AITask[] {
+  if (tasks.length === 0) return []
+
+  // Process in start-time order via a mutable queue
+  const queue = [...tasks].sort((a, b) => a.time.localeCompare(b.time))
+  const result: AITask[] = []
+
+  while (queue.length > 0) {
+    const task = queue.shift()!
+    const tStart = timeToMin(task.time)
+    const tEnd = tStart + task.durationMinutes
+
+    // Only the last result task can conflict (we process in chronological order)
+    const prev = result.length > 0 ? result[result.length - 1] : null
+    const prevEnd = prev ? timeToMin(prev.time) + prev.durationMinutes : -1
+
+    if (!prev || tStart >= prevEnd) {
+      result.push({ ...task })
+      continue
+    }
+
+    // Overlap: current task starts before previous one ends
+    if (SPLITTABLE_CATEGORIES.has(prev.category)) {
+      // Trim previous task to end when current starts
+      const firstPartDuration = tStart - timeToMin(prev.time)
+      if (firstPartDuration >= MIN_BLOCK_MINUTES) {
+        result[result.length - 1] = { ...prev, durationMinutes: firstPartDuration }
+      } else {
+        result.pop()
+      }
+
+      // Add current task
+      result.push({ ...task })
+
+      // If previous task had time remaining after current task ends, re-queue it
+      const remainder = prevEnd - tEnd
+      if (remainder >= MIN_BLOCK_MINUTES) {
+        const continuation: AITask = { ...prev, time: minToTime(tEnd), durationMinutes: remainder }
+        const insertAt = queue.findIndex((q) => timeToMin(q.time) > tEnd)
+        if (insertAt === -1) queue.push(continuation)
+        else queue.splice(insertAt, 0, continuation)
+      }
+    } else if (SPLITTABLE_CATEGORIES.has(task.category)) {
+      // Current task is splittable — start it after previous ends
+      const shiftedDuration = tEnd - prevEnd
+      if (shiftedDuration >= MIN_BLOCK_MINUTES) {
+        const shifted: AITask = { ...task, time: minToTime(prevEnd), durationMinutes: shiftedDuration }
+        queue.unshift(shifted)
+      }
+    } else {
+      // Neither splittable — trim current to start after previous
+      const trimmedDuration = tEnd - prevEnd
+      if (trimmedDuration >= MIN_BLOCK_MINUTES) {
+        queue.unshift({ ...task, time: minToTime(prevEnd), durationMinutes: trimmedDuration })
+      }
+    }
+  }
+
+  return result
+}
+
+// ─── Commute task correction ──────────────────────────────────────────────────
+// The AI sometimes generates commute tasks with durationMinutes = 0, or places
+// the morning commute at workStart instead of (workStart - duration).
+// This post-processor fixes both issues using the user's actual commute data.
+
+function fixCommuteTasks(tasks: AITask[], user: IUser, workStart: string, workEnd: string): AITask[] {
+  const homeToOfficeDuration = user.profile?.commute?.homeToOfficeDuration ?? 0
+  const officeToHomeDuration = user.profile?.commute?.officeToHomeDuration ?? homeToOfficeDuration
+  const workMode = user.profile?.workMode ?? 'office'
+
+  if ((workMode !== 'office' && workMode !== 'hybrid') || homeToOfficeDuration === 0) {
+    return tasks
+  }
+
+  const workStartMin = timeToMin(workStart)
+  const workEndMin = timeToMin(workEnd)
+  const morningDepartureMin = workStartMin - homeToOfficeDuration
+
+  return tasks.map((task) => {
+    if (task.category !== 'commute') return task
+
+    const tMin = timeToMin(task.time)
+
+    // Classify as morning or evening commute by proximity
+    const distToMorning = Math.abs(tMin - morningDepartureMin)
+    const distToEvening = Math.abs(tMin - workEndMin)
+    const isMorning = distToMorning <= distToEvening
+
+    if (isMorning) {
+      return {
+        ...task,
+        time: minToTime(morningDepartureMin),
+        durationMinutes: homeToOfficeDuration,
+      }
+    } else {
+      return {
+        ...task,
+        time: workEnd,
+        durationMinutes: officeToHomeDuration,
+      }
+    }
+  })
+}
+
+// ─── Work-hours boundary enforcement ─────────────────────────────────────────
+// Removes or trims focus_work tasks that start before workStart.
+// Other categories (hydration, exercise, wind_down, etc.) are allowed pre-work.
+
+function enforceWorkBoundaries(tasks: AITask[], workStart: string): AITask[] {
+  const workStartMin = timeToMin(workStart)
+  return tasks.flatMap((task) => {
+    if (!SPLITTABLE_CATEGORIES.has(task.category)) return [task]
+    const tStart = timeToMin(task.time)
+    if (tStart >= workStartMin) return [task]
+
+    // Task starts before work start — trim or drop
+    const tEnd = tStart + task.durationMinutes
+    if (tEnd <= workStartMin) return []  // entirely before work start, drop it
+
+    // Partially before — trim to start at workStart
+    return [{ ...task, time: workStart, durationMinutes: tEnd - workStartMin }]
+  })
+}
+
 // ─── Merge + sort ─────────────────────────────────────────────────────────────
 
-function mergeTasks(aiTasks: AITask[], medicineTasks: AITask[]): IRoutineTask[] {
+function mergeTasks(aiTasks: AITask[], medicineTasks: AITask[], user: IUser, workStart: string, workEnd: string): IRoutineTask[] {
   // Remove any AI-generated medicine tasks (AI shouldn't generate these)
   const filtered = aiTasks.filter((t) => t.category !== 'medicine')
 
-  // Merge and sort by time
-  const all = [...filtered, ...medicineTasks].sort((a, b) => a.time.localeCompare(b.time))
+  // Merge medicine anchors first so they are treated as fixed points
+  const combined = [...filtered, ...medicineTasks]
 
-  return all.map((t) => ({
+  // Fix commute task durations and times before any other processing
+  const withCommute = fixCommuteTasks(combined, user, workStart, workEnd)
+
+  // Enforce work hours: move/drop focus_work before workStart
+  const bounded = enforceWorkBoundaries(withCommute, workStart)
+
+  // Resolve any remaining overlaps, splitting long blocks around fixed ones
+  const resolved = resolveOverlapsAndSplit(bounded)
+
+  return resolved.map((t) => ({
     _id: new Types.ObjectId(),
     time: t.time,
     durationMinutes: t.durationMinutes,
@@ -219,7 +395,7 @@ export async function generateRoutine(userId: string, date: string): Promise<IRo
     aiTasks = buildFallbackTasks(user, workStart, workEnd, medicineTasks)
   }
 
-  const tasks = mergeTasks(aiTasks, medicineTasks)
+  const tasks = mergeTasks(aiTasks, medicineTasks, user, workStart, workEnd)
 
   // Build prompt snapshot — exclude all medicine/medical data
   const safeSnapshot = isAIConfigured

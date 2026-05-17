@@ -7,6 +7,7 @@ import {
   getConnections,
   disconnectCalendar,
   getEventsForDay,
+  syncAllConnections,
 } from './calendar.service.js'
 import { sendSuccess, sendNoContent } from '../../lib/response.js'
 
@@ -67,6 +68,15 @@ export async function listEvents(req: Request, res: Response, next: NextFunction
   try {
     const date = req.query.date as string
     sendSuccess(res, await getEventsForDay(req.user!.userId, date))
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function syncCalendar(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    await syncAllConnections(req.user!.userId)
+    sendNoContent(res)
   } catch (err) {
     next(err)
   }

@@ -51,7 +51,17 @@ export interface GroupInvite {
   sentAt: string
 }
 
+export interface EmailCheckResult {
+  exists: boolean
+  name?: string
+}
+
 export const groupsApi = {
+  async checkEmail(email: string): Promise<EmailCheckResult> {
+    const res = await apiClient.get<{ data: EmailCheckResult }>(`/user/check-email?email=${encodeURIComponent(email)}`)
+    return res.data.data
+  },
+
   async createGroup(name: string, inviteEmails: string[]): Promise<Group> {
     const res = await apiClient.post<{ data: Group }>('/groups', { name, inviteEmails })
     return res.data.data

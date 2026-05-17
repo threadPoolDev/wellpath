@@ -2,7 +2,7 @@ import { UploadApiResponse } from 'cloudinary'
 import { cloudinary } from '../../lib/cloudinary.js'
 import { ValidationError, NotFoundError } from '../../lib/errors.js'
 import { PROFILE_PHOTO } from '../../constants/index.js'
-import { setProfilePhoto, clearProfilePhoto, findById, updateProfile } from './user.repository.js'
+import { setProfilePhoto, clearProfilePhoto, findById, updateProfile, findByEmail } from './user.repository.js'
 import { ProfilePhotoResponse } from './user.types.js'
 import { IUser } from './user.model.js'
 import { embedUserProfile } from '../embeddings/embeddings.service.js'
@@ -123,6 +123,17 @@ export async function updateUserProfile(userId: string, dto: UpdateProfileDto): 
   )
 
   return updated
+}
+
+export async function checkEmailExists(
+  requestingUserId: string,
+  email: string
+): Promise<{ exists: boolean; name?: string }> {
+  const user = await findByEmail(email)
+  if (!user) return { exists: false }
+  // Don't reveal that the requesting user's own email "exists" — they can't invite themselves
+  if (String(user._id) === requestingUserId) return { exists: false }
+  return { exists: true, name: user.name }
 }
 
 export async function deleteProfilePhoto(userId: string): Promise<void> {

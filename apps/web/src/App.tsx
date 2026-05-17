@@ -14,6 +14,7 @@ import { MorningCheckin } from '@/features/checkin/MorningCheckin'
 import { Dashboard } from '@/features/dashboard/Dashboard'
 import { SettingsPage } from '@/features/settings/SettingsPage'
 import { GroupsPage } from '@/features/groups/GroupsPage'
+import { AppShell } from '@/components/layout/AppShell'
 
 const queryClient = new QueryClient()
 
@@ -45,25 +46,19 @@ function AppRoutes() {
       {/* OAuth callback — handled by AuthCallback which navigates after /me */}
       <Route path="/auth/callback" element={<AuthCallback />} />
 
-      {/* Onboarding — requires auth, redirects to dashboard if already complete */}
+      {/* Onboarding — outside the shell; requires auth */}
       <Route path={ROUTES.ONBOARDING} element={<ProtectedRoute><OnboardingFlow /></ProtectedRoute>} />
 
-      {/* Morning check-in */}
+      {/* Morning check-in — outside the shell; requires auth */}
       <Route path="/checkin/morning" element={<ProtectedRoute><MorningCheckin /></ProtectedRoute>} />
 
-      {/* Protected routes */}
-      <Route
-        path={ROUTES.DASHBOARD}
-        element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
-      />
-      <Route
-        path={ROUTES.GROUPS}
-        element={<ProtectedRoute><GroupsPage /></ProtectedRoute>}
-      />
-      <Route
-        path={ROUTES.SETTINGS}
-        element={<ProtectedRoute><SettingsPage /></ProtectedRoute>}
-      />
+      {/* Shell-wrapped authenticated routes */}
+      <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
+        <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
+        <Route path={ROUTES.GROUPS} element={<GroupsPage />} />
+        <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
+        <Route path={ROUTES.HISTORY} element={<Navigate to={ROUTES.DASHBOARD} replace />} />
+      </Route>
 
       {/* Default */}
       <Route path="/" element={<Navigate to={ROUTES.LOGIN} replace />} />

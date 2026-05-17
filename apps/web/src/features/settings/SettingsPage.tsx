@@ -92,7 +92,7 @@ export function SettingsPage() {
     return (
       <div className="max-w-2xl mx-auto p-6">
         <div className="animate-pulse space-y-4">
-          {[1, 2, 3].map((n) => <div key={n} className="h-16 bg-stone-100 rounded-xl" />)}
+          {[1, 2, 3].map((n) => <div key={n} className="h-16 bg-stone-100 dark:bg-stone-800 rounded-xl" />)}
         </div>
       </div>
     )
@@ -100,7 +100,7 @@ export function SettingsPage() {
 
   return (
     <div className="max-w-2xl mx-auto p-6 pb-24">
-      <h1 className="text-2xl font-semibold text-stone-800 mb-6">Settings</h1>
+      <h1 className="text-2xl font-semibold text-stone-800 dark:text-stone-100 mb-6">Settings</h1>
 
       {/* Profile photo */}
       {profile && (
@@ -113,8 +113,8 @@ export function SettingsPage() {
             variant="full"
           />
           <div>
-            <p className="font-medium text-stone-700">{profile.email}</p>
-            <p className="text-sm text-stone-400">Profile photo is managed separately</p>
+            <p className="font-medium text-stone-700 dark:text-stone-200">{profile.email}</p>
+            <p className="text-sm text-stone-400 dark:text-stone-500">Profile photo is managed separately</p>
           </div>
         </div>
       )}
@@ -182,22 +182,22 @@ export function SettingsPage() {
           <Field label="Water reminders">
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={waterReminder} onChange={(e) => setWaterReminder(e.target.checked)}
-                className="w-4 h-4 accent-stone-700" />
-              <span className="text-sm text-stone-600">Remind me to drink water throughout the day</span>
+                className="w-4 h-4 accent-stone-700 dark:accent-stone-400" />
+              <span className="text-sm text-stone-600 dark:text-stone-300">Remind me to drink water throughout the day</span>
             </label>
           </Field>
         </Section>
 
         {/* Medicines */}
         <Section title="Medicine reminders">
-          <p className="text-xs text-stone-400 -mt-2 mb-3">
+          <p className="text-xs text-stone-400 dark:text-stone-500 -mt-2 mb-3">
             WellPath is not a medical app. Reminders are gentle nudges — always follow your doctor's guidance.
           </p>
           {medicines.map((med, i) => (
-            <div key={i} className="bg-stone-50 border border-stone-200 rounded-xl p-4 space-y-3">
+            <div key={i} className="bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-stone-600">Medicine {i + 1}</p>
-                <button onClick={() => removeMedicine(i)} className="text-xs text-stone-400 hover:text-red-400 transition-colors">
+                <p className="text-sm font-medium text-stone-600 dark:text-stone-300">Medicine {i + 1}</p>
+                <button onClick={() => removeMedicine(i)} className="text-xs text-stone-400 dark:text-stone-500 hover:text-red-400 transition-colors">
                   Remove
                 </button>
               </div>
@@ -209,13 +209,13 @@ export function SettingsPage() {
               />
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="text-xs text-stone-400 mb-1 block">Time</label>
+                  <label className="text-xs text-stone-400 dark:text-stone-500 mb-1 block">Time</label>
                   <input type="time" value={med.timings[0] ?? '08:00'}
                     onChange={(e) => updateMedicine(i, 'timings', [e.target.value])}
                     className="input-base" />
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs text-stone-400 mb-1 block">With food?</label>
+                  <label className="text-xs text-stone-400 dark:text-stone-500 mb-1 block">With food?</label>
                   <Select value={med.withFood} onChange={(v) => updateMedicine(i, 'withFood', v)} options={[
                     { value: 'yes', label: 'Yes' },
                     { value: 'no', label: 'No' },
@@ -226,13 +226,13 @@ export function SettingsPage() {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={med.reminderEnabled}
                   onChange={(e) => updateMedicine(i, 'reminderEnabled', e.target.checked)}
-                  className="w-4 h-4 accent-stone-700" />
-                <span className="text-sm text-stone-600">Enable reminder</span>
+                  className="w-4 h-4 accent-stone-700 dark:accent-stone-400" />
+                <span className="text-sm text-stone-600 dark:text-stone-300">Enable reminder</span>
               </label>
             </div>
           ))}
           <button onClick={addMedicine}
-            className="w-full py-3 rounded-xl border border-dashed border-stone-300 text-sm text-stone-500 hover:bg-stone-50 transition-colors">
+            className="w-full py-3 rounded-xl border border-dashed border-stone-300 dark:border-stone-600 text-sm text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
             + Add medicine
           </button>
         </Section>
@@ -242,8 +242,8 @@ export function SettingsPage() {
           <Field label="">
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={shareWithGroups} onChange={(e) => setShareWithGroups(e.target.checked)}
-                className="w-4 h-4 accent-stone-700" />
-              <span className="text-sm text-stone-600">Share my progress with groups</span>
+                className="w-4 h-4 accent-stone-700 dark:accent-stone-400" />
+              <span className="text-sm text-stone-600 dark:text-stone-300">Share my progress with groups</span>
             </label>
           </Field>
           {shareWithGroups && (
@@ -259,12 +259,12 @@ export function SettingsPage() {
       </div>
 
       {/* Save button — fixed at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-stone-100 p-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-stone-800 border-t border-stone-100 dark:border-stone-700 p-4">
         <div className="max-w-2xl mx-auto">
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full py-3 rounded-xl bg-stone-800 text-white font-medium text-sm disabled:opacity-40 hover:bg-stone-700 transition-colors"
+            className="w-full py-3 rounded-xl bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 font-medium text-sm disabled:opacity-40 hover:bg-stone-700 dark:hover:bg-stone-100 transition-colors"
           >
             {saving ? 'Saving...' : saved ? '✓ Saved' : 'Save changes'}
           </button>
@@ -279,8 +279,8 @@ export function SettingsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">{title}</h2>
-      <div className="bg-white border border-stone-200 rounded-2xl p-4 space-y-4">
+      <h2 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wide mb-3">{title}</h2>
+      <div className="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl p-4 space-y-4">
         {children}
       </div>
     </div>
@@ -290,7 +290,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      {label && <label className="block text-sm font-medium text-stone-600 mb-1">{label}</label>}
+      {label && <label className="block text-sm font-medium text-stone-600 dark:text-stone-300 mb-1">{label}</label>}
       {children}
     </div>
   )

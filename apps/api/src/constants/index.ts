@@ -204,6 +204,8 @@ export const QUESTION_TYPES = [
   'text_input',
   'yes_no',
   'scale',
+  'photo_upload',
+  'calendar_connect',
 ] as const
 
 // ─── Groups ───────────────────────────────────────────────────────────────────

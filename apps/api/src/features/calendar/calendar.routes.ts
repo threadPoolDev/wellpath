@@ -8,6 +8,7 @@ import {
   listConnections,
   removeConnection,
   listEvents,
+  syncCalendar,
 } from './calendar.controller.js'
 
 const router = Router()
@@ -24,5 +25,6 @@ router.get('/connect/microsoft/callback', microsoftCallback)
 router.get('/connections', requireAuth, listConnections)
 router.delete('/connections/:provider', requireAuth, removeConnection)
 router.get('/events', requireAuth, listEvents)
+router.post('/sync', requireAuth, syncCalendar)
 
 export { router as calendarRouter }

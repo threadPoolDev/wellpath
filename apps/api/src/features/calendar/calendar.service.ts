@@ -73,39 +73,69 @@ export async function handleGoogleCallback(code: string, state: string): Promise
     connectionNote: '',
   })
 
-  syncGoogle(userId, tokens.access_token, tokens.refresh_token ?? '').catch(() => null)
+  const expiry = tokens.expiry_date ? new Date(tokens.expiry_date) : new Date(Date.now() + 3600_000)
+  syncGoogle(userId, tokens.access_token, tokens.refresh_token ?? '', undefined, expiry).catch((e) =>
+    console.error('[calendar] initial google sync failed:', e)
+  )
 }
 
-async function syncGoogle(userId: string, accessToken: string, refreshToken: string): Promise<void> {
+async function syncGoogle(
+  userId: string,
+  accessToken: string,
+  refreshToken: string,
+  timeMin?: Date,
+  tokenExpiry?: Date
+): Promise<void> {
+  console.log(`[google-sync] starting for userId=${userId} tokenExpiry=${tokenExpiry?.toISOString() ?? 'unknown'} hasRefreshToken=${!!refreshToken}`)
+
   const client = googleClient()
-  client.setCredentials({ access_token: accessToken, refresh_token: refreshToken })
+  client.setCredentials({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    // If expiry unknown, force refresh by pretending token already expired
+    expiry_date: tokenExpiry?.getTime() ?? Date.now() - 1,
+  })
 
   client.on('tokens', async (t) => {
-    if (t.access_token && t.expiry_date) {
+    console.log('[google-sync] received new tokens from Google, persisting...')
+    if (t.access_token) {
       await updateConnectionFields(userId, 'google', {
         accessToken: t.access_token,
-        tokenExpiry: new Date(t.expiry_date),
+        ...(t.expiry_date ? { tokenExpiry: new Date(t.expiry_date) } : {}),
+        ...(t.refresh_token ? { refreshToken: t.refresh_token } : {}),
       })
     }
   })
 
   const cal = google.calendar({ version: 'v3', auth: client })
-  const now = new Date()
-  const future = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)
+  const from = timeMin ?? new Date()
+  const future = new Date(from.getTime() + 14 * 24 * 60 * 60 * 1000)
 
+  console.log(`[google-sync] fetching events from ${from.toISOString()} to ${future.toISOString()}`)
   const { data } = await cal.events.list({
     calendarId: 'primary',
-    timeMin: now.toISOString(),
+    timeMin: from.toISOString(),
     timeMax: future.toISOString(),
     singleEvents: true,
     orderBy: 'startTime',
     maxResults: 250,
   })
 
-  for (const event of data.items ?? []) {
-    if (!event.start?.dateTime || !event.end?.dateTime) continue
+  const items = data.items ?? []
+  console.log(`[google-sync] Google returned ${items.length} raw event(s)`)
+
+  let stored = 0
+  let skipped = 0
+  for (const event of items) {
+    if (!event.start?.dateTime || !event.end?.dateTime) {
+      console.log(`[google-sync] skipping all-day event: "${event.summary}"`)
+      skipped++
+      continue
+    }
     const startTime = new Date(event.start.dateTime)
     const endTime = new Date(event.end.dateTime)
+    const date = startTime.toISOString().slice(0, 10)
+    console.log(`[google-sync] upserting "${event.summary}" on date=${date} start=${startTime.toISOString()}`)
     await upsertCalendarEvent({
       userId: userId as never,
       provider: 'google',
@@ -116,10 +146,12 @@ async function syncGoogle(userId: string, accessToken: string, refreshToken: str
       durationMinutes: Math.round((endTime.getTime() - startTime.getTime()) / 60_000),
       isRecurring: !!event.recurringEventId,
       fetchedAt: new Date(),
-      date: startTime.toISOString().slice(0, 10),
+      date,
     })
+    stored++
   }
 
+  console.log(`[google-sync] done: ${stored} stored, ${skipped} all-day events skipped`)
   await updateConnectionFields(userId, 'google', { lastSyncedAt: new Date() })
 }
 
@@ -195,8 +227,8 @@ export async function handleMicrosoftCallback(code: string, state: string): Prom
   syncMicrosoft(userId, tokens.access_token, tokens.refresh_token ?? '').catch(() => null)
 }
 
-async function syncMicrosoft(userId: string, accessToken: string, refreshToken: string): Promise<void> {
-  const now = new Date()
+async function syncMicrosoft(userId: string, accessToken: string, refreshToken: string, timeMin?: Date): Promise<void> {
+  const now = timeMin ?? new Date()
   const future = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)
 
   const params = new URLSearchParams({
@@ -294,6 +326,41 @@ export async function disconnectCalendar(userId: string, provider: string): Prom
   await deleteEventsByProvider(userId, provider)
 }
 
+// Re-sync all active calendar connections for a user.
+// Uses start-of-today (UTC) as timeMin so events from earlier today are included.
+export async function syncAllConnections(userId: string): Promise<void> {
+  const connections = await getActiveConnections(userId)
+  console.log(`[calendar] syncAllConnections userId=${userId} found ${connections.length} active connection(s):`,
+    connections.map((c) => ({ provider: c.provider, email: c.accountEmail, isActive: c.isActive, tokenExpiry: c.tokenExpiry }))
+  )
+  if (connections.length === 0) return
+
+  // Start from midnight UTC today so all of today's events are captured
+  const startOfToday = new Date()
+  startOfToday.setUTCHours(0, 0, 0, 0)
+  console.log(`[calendar] syncing from ${startOfToday.toISOString()} (midnight UTC today)`)
+
+  const results = await Promise.allSettled(
+    connections.map((c) => {
+      if (c.provider === 'google') {
+        return syncGoogle(userId, c.accessToken, c.refreshToken ?? '', startOfToday, c.tokenExpiry ?? undefined)
+      }
+      if (c.provider === 'microsoft') {
+        return syncMicrosoft(userId, c.accessToken, c.refreshToken ?? '', startOfToday)
+      }
+      return Promise.resolve()
+    })
+  )
+
+  results.forEach((r, i) => {
+    if (r.status === 'rejected') {
+      console.error(`[calendar] sync failed for ${connections[i].provider}:`, r.reason)
+    } else {
+      console.log(`[calendar] sync succeeded for ${connections[i].provider}`)
+    }
+  })
+}
+
 function classifyDay(events: ICalendarEvent[]): {
   dayType: 'light' | 'moderate' | 'packed'
   totalMeetingMinutes: number
@@ -316,6 +383,9 @@ export async function getEventsForDay(userId: string, date: string): Promise<Day
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new ValidationError('date must be YYYY-MM-DD')
 
   const raw = await getEventsForDate(userId, date)
+  console.log(`[calendar] getEventsForDay userId=${userId} date=${date} → ${raw.length} raw event(s) in DB:`,
+    raw.map((e) => ({ title: e.title, provider: e.provider, date: e.date, start: e.startTime }))
+  )
 
   // Dedup: same title + startTime within 2 minutes → keep first
   const deduped: ICalendarEvent[] = []

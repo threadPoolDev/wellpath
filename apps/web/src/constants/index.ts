@@ -85,3 +85,39 @@ export const ROUTES = {
   HISTORY: '/history',
   SETTINGS: '/settings',
 } as const
+
+export const NAV_VIEWS = {
+  DASHBOARD: 'dashboard',
+  ROUTINE:   'routine',
+  GROUPS:    'groups',
+  HISTORY:   'history',
+  SETTINGS:  'settings',
+} as const
+
+export const DASHBOARD_PANELS = {
+  TODAY:    'today',
+  CALENDAR: 'calendar',
+  CHECKIN:  'checkin',
+} as const
+
+export const NAV_WIDTH = {
+  EXPANDED:  240,
+  COLLAPSED: 64,
+} as const
+
+export const BREAKPOINTS = {
+  MOBILE: 768,
+  TABLET: 1024,
+} as const
+
+export const TRANSITION_MS = {
+  NAV:     200,
+  CONTENT: 150,
+  GROUPS:  200,
+} as const
+
+export const LOCAL_STORAGE_KEYS = {
+  NAV_COLLAPSED:   'nav_collapsed',
+  ONBOARDING_HINT: 'onboarding_hint_shown',
+  THEME:           'wellpath-theme',
+} as const

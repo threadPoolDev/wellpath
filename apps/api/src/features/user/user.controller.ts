@@ -39,6 +39,17 @@ export async function uploadProfilePhoto(req: Request, res: Response, next: Next
   }
 }
 
+export async function checkEmail(req: Request, res: Response, next: NextFunction) {
+  try {
+    const email = (req.query.email as string | undefined)?.trim()
+    if (!email) throw new ValidationError('email query param is required')
+    const result = await userService.checkEmailExists(req.user!.userId, email)
+    sendSuccess(res, result)
+  } catch (err) {
+    next(err)
+  }
+}
+
 export async function deleteProfilePhoto(req: Request, res: Response, next: NextFunction) {
   try {
     await userService.deleteProfilePhoto(req.user!.userId)
