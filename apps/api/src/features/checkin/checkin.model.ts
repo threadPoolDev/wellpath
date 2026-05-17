@@ -9,6 +9,7 @@ export interface ICheckin extends Document {
   response?: (typeof CHECKIN_RESPONSES)[number]
   missedReason?: string
   didInstead?: string
+  shareWithGroup?: boolean
   eveningSummary?: {
     overallRating: number
     howWasYourDay?: string
@@ -27,6 +28,7 @@ const checkinSchema = new Schema<ICheckin>(
     response: { type: String, enum: CHECKIN_RESPONSES },
     missedReason: String,
     didInstead: String,
+    shareWithGroup: Boolean,
     eveningSummary: {
       overallRating: { type: Number, min: 1, max: 5 },
       howWasYourDay: String,

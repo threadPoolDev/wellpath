@@ -5,6 +5,7 @@ import { userRouter } from './features/user/user.routes.js'
 import { travelRouter } from './features/travel/travel.routes.js'
 import { calendarRouter } from './features/calendar/calendar.routes.js'
 import { checkinRouter } from './features/checkin/checkin.routes.js'
+import { routineRouter } from './features/routine/routine.routes.js'
 
 const router = Router()
 
@@ -33,7 +34,7 @@ router.use('/calendar', calendarRouter)
 router.use('/checkin', checkinRouter)
 
 // PR #9 — feat/ai-routine-engine
-// router.use('/routine', routineRouter)
+router.use('/routine', routineRouter)
 
 // PR #13 — feat/desktop-notifications
 // router.use('/notifications', notificationsRouter)

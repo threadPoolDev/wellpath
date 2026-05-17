@@ -179,7 +179,7 @@ export const CHECKIN_TYPES = [
   'evening_summary',
 ] as const
 
-export const CHECKIN_RESPONSES = ['done', 'missed', 'ended_early'] as const
+export const CHECKIN_RESPONSES = ['done', 'missed', 'skipped', 'ended_early'] as const
 
 // ─── Notifications ────────────────────────────────────────────────────────────
 

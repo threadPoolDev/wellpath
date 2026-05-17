@@ -10,6 +10,7 @@ import { GuestRoute } from '@/features/auth/components/GuestRoute'
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute'
 import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow'
 import { MorningCheckin } from '@/features/checkin/MorningCheckin'
+import { Dashboard } from '@/features/dashboard/Dashboard'
 
 const queryClient = new QueryClient()
 
@@ -48,7 +49,7 @@ function AppRoutes() {
       {/* Protected routes */}
       <Route
         path={ROUTES.DASHBOARD}
-        element={<ProtectedRoute><div className="p-8">Dashboard — coming in PR #10</div></ProtectedRoute>}
+        element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
       />
       <Route
         path={ROUTES.GROUPS}

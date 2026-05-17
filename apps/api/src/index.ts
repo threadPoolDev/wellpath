@@ -4,11 +4,13 @@ import helmet from 'helmet'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import passport from 'passport'
+import swaggerUi from 'swagger-ui-express'
 import { connectDB } from './lib/db.js'
 import { configurePassport } from './features/auth/passport.config.js'
 import { router } from './router.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { globalRateLimiter } from './middleware/rateLimiter.js'
+import { openapiSpec } from './docs/openapi.js'
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -50,6 +52,13 @@ app.use(passport.initialize())
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
+
+// Swagger UI — dev only (helmet CSP is off in dev, so the UI loads fine)
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, {
+    customSiteTitle: 'WellPath API Docs',
+  }))
+}
 
 app.use('/api', router)
 

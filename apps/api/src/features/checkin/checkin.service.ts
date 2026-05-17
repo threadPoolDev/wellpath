@@ -1,8 +1,9 @@
 import { ValidationError } from '../../lib/errors.js'
 import { ENERGY_LEVELS, MOOD_OPTIONS, DAY_TYPES } from '../../constants/index.js'
 import { getEventsForDay } from '../calendar/calendar.service.js'
-import { saveMorningCheckin, findTodayRoutine } from './checkin.repository.js'
+import { saveMorningCheckin, findTodayRoutine, createTaskCheckin } from './checkin.repository.js'
 import { MorningCheckinDto, MorningCheckinResponse } from './checkin.types.js'
+import { generateRoutine } from '../routine/routine.service.js'
 
 function todayDate(): string {
   return new Date().toISOString().slice(0, 10)
@@ -43,6 +44,11 @@ export async function submitMorningCheckin(
     dayEvents.totalFreeMinutes
   )
 
+  // Trigger routine generation in the background — non-blocking
+  generateRoutine(userId, date).catch((err) =>
+    console.error('[checkin] Routine generation failed:', err)
+  )
+
   return {
     routineId: String(routine._id),
     date: routine.date,
@@ -56,6 +62,17 @@ export async function submitMorningCheckin(
       submittedAt: routine.morningCheckin!.submittedAt.toISOString(),
     },
   }
+}
+
+export async function recordTaskCheckin(
+  userId: string,
+  routineId: string,
+  taskId: string,
+  status: 'done' | 'missed' | 'skipped',
+  extras: { missedReason?: string; didInstead?: string; shareWithGroup?: boolean } = {}
+): Promise<void> {
+  const type = status === 'done' ? 'task_completion' : 'task_missed'
+  await createTaskCheckin(userId, routineId, taskId, type, status, extras)
 }
 
 export async function getTodayCheckinStatus(
