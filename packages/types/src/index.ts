@@ -8,6 +8,14 @@ export interface AuthUser {
   name: string
   onboardingComplete: boolean
   profilePhoto: { url: string; thumbnailUrl: string } | null
+  // Subset of profile returned by GET /auth/me — extended as features require
+  profile?: {
+    personal?: {
+      relationshipStatus?: 'single' | 'partnered' | 'married'
+    }
+    role?: string
+    workMode?: string
+  }
 }
 
 // ─── API response envelope ───────────────────────────────────────────────────
