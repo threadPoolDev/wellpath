@@ -46,14 +46,24 @@ export async function saveMorningCheckin(
 export async function createEveningSummary(
   userId: string,
   routineId: string,
-  summary: { overallRating: number; howWasYourDay?: string; tomorrowNote?: string }
+  summary: { overallRating?: number; howWasYourDay?: string; tomorrowNote?: string; skipped?: boolean }
 ): Promise<ICheckin> {
   return Checkin.create({
     userId: new Types.ObjectId(userId),
     routineId: new Types.ObjectId(routineId),
     type: 'evening_summary',
-    eveningSummary: summary,
+    ...(summary.skipped ? {} : { eveningSummary: summary }),
     timestamp: new Date(),
+  })
+}
+
+export async function findEveningSummaryForToday(userId: string, date: string): Promise<ICheckin | null> {
+  const startOfDay = new Date(`${date}T00:00:00.000Z`)
+  const endOfDay = new Date(`${date}T23:59:59.999Z`)
+  return Checkin.findOne({
+    userId: new Types.ObjectId(userId),
+    type: 'evening_summary',
+    timestamp: { $gte: startOfDay, $lte: endOfDay },
   })
 }
 
