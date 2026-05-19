@@ -18,6 +18,10 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@wellpath/constants": "*",
+    "@wellpath/types": "*",
+    "@wellpath/api-client": "*",
+    "@wellpath/store": "*",
     "@radix-ui/react-slot": "^1.1.0",
     "@tanstack/react-query": "^5.62.0",
     "axios": "^1.7.9",

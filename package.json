@@ -2,7 +2,8 @@
   "name": "wellpath",
   "private": true,
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "engines": {
     "node": ">=22.0.0",

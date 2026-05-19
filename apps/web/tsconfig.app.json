@@ -19,7 +19,11 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@wellpath/constants": ["../../packages/constants/src/index.ts"],
+      "@wellpath/types":     ["../../packages/types/src/index.ts"],
+      "@wellpath/api-client":["../../packages/api-client/src/index.ts"],
+      "@wellpath/store":     ["../../packages/store/src/index.ts"]
     }
   },
   "include": ["src"]

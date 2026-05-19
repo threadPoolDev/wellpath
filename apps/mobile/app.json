@@ -1,0 +1,62 @@
+{
+  "expo": {
+    "name": "WellPath",
+    "slug": "wellpath",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "wellpath",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#fafaf9"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.wellpath.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "WellPath uses your camera to update your profile photo.",
+        "NSPhotoLibraryUsageDescription": "WellPath accesses your photos to let you choose a profile photo.",
+        "NSUserNotificationUsageDescription": "WellPath sends reminders for your daily routine, medicines, and check-ins.",
+        "NSLocationWhenInUseUsageDescription": "WellPath uses your location to estimate commute time.",
+        "NSFaceIDUsageDescription": "WellPath uses Face ID to keep your account secure.",
+        "UNAuthorizationOptionCriticalAlert": true
+      },
+      "entitlements": {
+        "com.apple.developer.usernotifications.critical-alerts": true
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#fafaf9"
+      },
+      "package": "com.wellpath.app",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      }
+    }
+  }
+}

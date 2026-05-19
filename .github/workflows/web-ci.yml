@@ -1,0 +1,37 @@
+name: Web CI
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+  pull_request:
+    branches: ['main']
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+
+jobs:
+  lint-typecheck-build:
+    name: Lint, type check & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Lint
+        run: npm run lint --workspace=@wellpath/web
+
+      - name: Type check
+        run: npm run type-check --workspace=@wellpath/web
+
+      - name: Build
+        run: npm run build --workspace=@wellpath/web

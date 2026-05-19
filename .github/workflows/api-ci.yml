@@ -1,0 +1,35 @@
+name: API CI
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'apps/api/**'
+  pull_request:
+    branches: ['main']
+    paths:
+      - 'apps/api/**'
+
+jobs:
+  lint-typecheck-build:
+    name: Lint, type check & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Lint
+        run: npm run lint --workspace=@wellpath/api
+
+      - name: Type check
+        run: npm run type-check --workspace=@wellpath/api
+
+      - name: Build
+        run: npm run build --workspace=@wellpath/api
