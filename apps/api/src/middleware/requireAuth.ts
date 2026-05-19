@@ -10,7 +10,12 @@ export interface AuthPayload {
 
 export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
   try {
-    const token = req.cookies?.token as string | undefined
+    // Cookie (web) takes precedence; Bearer header is the mobile fallback
+    const bearerHeader = req.headers.authorization
+    const token =
+      (req.cookies?.token as string | undefined) ??
+      (bearerHeader?.startsWith('Bearer ') ? bearerHeader.slice(7) : undefined)
+
     if (!token) throw new UnauthorizedError('No token provided')
 
     const secret = process.env.JWT_SECRET

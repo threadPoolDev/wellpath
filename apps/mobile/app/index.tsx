@@ -1,7 +1,24 @@
-import { Redirect } from 'expo-router'
+import { useEffect } from 'react'
+import { View, ActivityIndicator } from 'react-native'
+import { router } from 'expo-router'
+import { useAuthStore } from '../src/store/authStore'
 
-// Auth guard and deep-link redirect added in PR #M2.
-// For scaffold: always send to login screen.
+// Root entry — waits for auth initialisation then routes accordingly
 export default function Index() {
-  return <Redirect href="/(auth)/login" />
+  const { user, isInitialized } = useAuthStore()
+
+  useEffect(() => {
+    if (!isInitialized) return
+    if (user) {
+      router.replace(user.onboardingComplete ? '/(app)' : '/(onboarding)')
+    } else {
+      router.replace('/(auth)/login')
+    }
+  }, [isInitialized, user])
+
+  return (
+    <View className="flex-1 bg-stone-50 items-center justify-center">
+      <ActivityIndicator size="large" color="#44403c" />
+    </View>
+  )
 }
