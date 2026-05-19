@@ -145,6 +145,7 @@ export interface IUser extends Document {
     endpoint: string
     keys: { p256dh: string; auth: string }
   }
+  expoPushToken?: string
   profileEmbedding?: number[]
   insightsEnabled: boolean
 }
@@ -293,6 +294,7 @@ const userSchema = new Schema<IUser>(
       keys: { p256dh: String, auth: String, _id: false },
       _id: false,
     },
+    expoPushToken: String,
     profileEmbedding: [Number],
     insightsEnabled: { type: Boolean, default: true },
   },

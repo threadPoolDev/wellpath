@@ -213,3 +213,11 @@ export async function saveSubscription(
 export async function removeSubscription(userId: string): Promise<void> {
   await User.findByIdAndUpdate(userId, { $unset: { pushSubscription: 1 } })
 }
+
+export async function saveExpoToken(userId: string, token: string): Promise<void> {
+  await User.findByIdAndUpdate(userId, { $set: { expoPushToken: token } })
+}
+
+export async function removeExpoToken(userId: string): Promise<void> {
+  await User.findByIdAndUpdate(userId, { $unset: { expoPushToken: 1 } })
+}
