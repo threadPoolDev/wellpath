@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { submitMorningCheckin, getTodayCheckinStatus, submitEveningSummary } from './checkin.service.js'
+import { submitMorningCheckin, getTodayCheckinStatus, submitEveningSummary, getEveningStatus } from './checkin.service.js'
 import { sendSuccess, sendCreated, sendNoContent } from '../../lib/response.js'
 
 export async function morningCheckin(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -22,14 +22,23 @@ export async function checkinStatus(req: Request, res: Response, next: NextFunct
 
 export async function eveningSummary(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { routineId, overallRating, howWasYourDay, tomorrowNote } = req.body as {
+    const { routineId, overallRating, howWasYourDay, tomorrowNote, skipped } = req.body as {
       routineId: string
-      overallRating: number
+      overallRating?: number
       howWasYourDay?: string
       tomorrowNote?: string
+      skipped?: boolean
     }
-    await submitEveningSummary(req.user!.userId, routineId, { overallRating, howWasYourDay, tomorrowNote })
+    await submitEveningSummary(req.user!.userId, routineId, { overallRating, howWasYourDay, tomorrowNote, skipped })
     sendNoContent(res)
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function eveningStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    sendSuccess(res, await getEveningStatus(req.user!.userId))
   } catch (err) {
     next(err)
   }

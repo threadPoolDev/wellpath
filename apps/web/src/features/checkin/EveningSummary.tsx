@@ -4,6 +4,7 @@ import { checkinApi } from './api'
 interface EveningSummaryProps {
   routineId: string
   onDone: () => void
+  onSkip: () => void
 }
 
 const RATINGS = [
@@ -14,11 +15,12 @@ const RATINGS = [
   { value: 5, label: 'Great' },
 ]
 
-export function EveningSummary({ routineId, onDone }: EveningSummaryProps) {
+export function EveningSummary({ routineId, onDone, onSkip }: EveningSummaryProps) {
   const [rating, setRating] = useState<number | null>(null)
   const [howWasYourDay, setHowWasYourDay] = useState('')
   const [tomorrowNote, setTomorrowNote] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSkipping, setIsSkipping] = useState(false)
   const [done, setDone] = useState(false)
 
   async function handleSubmit() {
@@ -37,6 +39,13 @@ export function EveningSummary({ routineId, onDone }: EveningSummaryProps) {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  async function handleSkip() {
+    setIsSkipping(true)
+    // Record skip on the backend so the summary doesn't reappear on next visit
+    checkinApi.submitEvening(routineId, { skipped: true }).catch(() => null)
+    onSkip()
   }
 
   if (done) {
@@ -106,8 +115,9 @@ export function EveningSummary({ routineId, onDone }: EveningSummaryProps) {
 
       <div className="flex gap-3">
         <button
-          onClick={onDone}
-          className="flex-1 py-3 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 text-sm hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+          onClick={handleSkip}
+          disabled={isSkipping}
+          className="flex-1 py-3 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 text-sm hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors disabled:opacity-40"
         >
           Skip for now
         </button>
