@@ -244,3 +244,23 @@ export const TRAVEL_TIME = {
 
 export const GROUP_INVITE_EXPIRY_DAYS = 7
 export const GROUP_ACTIVITY_NOTIFICATION_HOUR = 20
+
+// ─── Insights ─────────────────────────────────────────────────────────────────
+
+export const INSIGHT_TYPES = ['pattern', 'positive', 'observation', 'weekly_summary'] as const
+
+export const INSIGHT_CATEGORIES = ['energy', 'completion', 'meetings', 'exercise'] as const
+
+export const INSIGHT_CACHE_TTL_HOURS = 24
+
+export const INSIGHTS_MIN_DATA_DAYS = 3
+
+export const INSIGHTS_LOOKBACK_DAYS = 30
+
+export const MOOD_GRAPH_DAYS = 14
+
+export const ENERGY_LEVEL_SCORES: Record<string, number> = {
+  low: 1,
+  medium: 2,
+  high: 3,
+}

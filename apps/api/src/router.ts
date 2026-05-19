@@ -8,6 +8,7 @@ import { checkinRouter } from './features/checkin/checkin.routes.js'
 import { routineRouter } from './features/routine/routine.routes.js'
 import { notificationsRouter } from './features/notifications/notification.routes.js'
 import { groupsRouter } from './features/groups/groups.routes.js'
+import { insightsRouter } from './features/insights/insights.routes.js'
 
 const router = Router()
 
@@ -46,5 +47,8 @@ router.use('/notifications', notificationsRouter)
 
 // PR #17 — feat/groups-backend
 router.use('/groups', groupsRouter)
+
+// PR #20 — feat/mood-energy-trends
+router.use('/insights', insightsRouter)
 
 export { router }

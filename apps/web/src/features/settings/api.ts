@@ -28,6 +28,7 @@ export interface UserProfile {
     shareWithGroups?: boolean
   }
   profilePhoto?: { url: string; thumbnailUrl: string }
+  insightsEnabled?: boolean
 }
 
 export interface UpdateProfilePayload {
@@ -49,6 +50,7 @@ export interface UpdateProfilePayload {
     defaultSharingPreference?: string
     shareWithGroups?: boolean
   }
+  insightsEnabled?: boolean
 }
 
 export const settingsApi = {

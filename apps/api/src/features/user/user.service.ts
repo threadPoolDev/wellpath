@@ -82,6 +82,7 @@ export interface UpdateProfileDto {
     defaultSharingPreference?: string
     shareWithGroups?: boolean
   }
+  insightsEnabled?: boolean
 }
 
 export async function updateUserProfile(userId: string, dto: UpdateProfileDto): Promise<IUser> {
@@ -113,6 +114,7 @@ export async function updateUserProfile(userId: string, dto: UpdateProfileDto): 
       fields['groupSharingDefaults.shareWithGroups'] = dto.groupSharingDefaults.shareWithGroups
     }
   }
+  if (dto.insightsEnabled !== undefined) fields['insightsEnabled'] = dto.insightsEnabled
 
   const updated = await updateProfile(userId, fields)
   if (!updated) throw new NotFoundError('User not found')

@@ -14,6 +14,7 @@ import { MorningCheckin } from '@/features/checkin/MorningCheckin'
 import { Dashboard } from '@/features/dashboard/Dashboard'
 import { SettingsPage } from '@/features/settings/SettingsPage'
 import { GroupsPage } from '@/features/groups/GroupsPage'
+import { HistoryPage } from '@/features/history/HistoryPage'
 import { AppShell } from '@/components/layout/AppShell'
 
 const queryClient = new QueryClient()
@@ -57,7 +58,7 @@ function AppRoutes() {
         <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
         <Route path={ROUTES.GROUPS} element={<GroupsPage />} />
         <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
-        <Route path={ROUTES.HISTORY} element={<Navigate to={ROUTES.DASHBOARD} replace />} />
+        <Route path={ROUTES.HISTORY} element={<HistoryPage />} />
       </Route>
 
       {/* Default */}

@@ -146,6 +146,7 @@ export interface IUser extends Document {
     keys: { p256dh: string; auth: string }
   }
   profileEmbedding?: number[]
+  insightsEnabled: boolean
 }
 
 const medicineSchema = new Schema<IMedicine>(
@@ -293,6 +294,7 @@ const userSchema = new Schema<IUser>(
       _id: false,
     },
     profileEmbedding: [Number],
+    insightsEnabled: { type: Boolean, default: true },
   },
   { timestamps: true }
 )

@@ -27,6 +27,7 @@ export function SettingsPage() {
   const [waterReminder, setWaterReminder] = useState(false)
   const [shareWithGroups, setShareWithGroups] = useState(true)
   const [sharingPreference, setSharingPreference] = useState('completion_only')
+  const [insightsEnabled, setInsightsEnabled] = useState(true)
   const [medicines, setMedicines] = useState<Medicine[]>([])
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export function SettingsPage() {
       setWaterReminder(p.profile.diet?.waterReminderNeeded ?? false)
       setShareWithGroups(p.groupSharingDefaults?.shareWithGroups ?? true)
       setSharingPreference(p.groupSharingDefaults?.defaultSharingPreference ?? 'completion_only')
+      setInsightsEnabled(p.insightsEnabled ?? true)
       setMedicines(p.profile.health?.medicines ?? [])
     }).catch(() => null).finally(() => setLoading(false))
   }, [])
@@ -58,6 +60,7 @@ export function SettingsPage() {
         diet: { type: dietType, waterReminderNeeded: waterReminder },
         medicines,
         groupSharingDefaults: { shareWithGroups, defaultSharingPreference: sharingPreference },
+        insightsEnabled,
       }
       const updated = await settingsApi.updateProfile(payload)
       setProfile(updated)
@@ -235,6 +238,22 @@ export function SettingsPage() {
             className="w-full py-3 rounded-xl border border-dashed border-stone-300 dark:border-stone-600 text-sm text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
             + Add medicine
           </button>
+        </Section>
+
+        {/* Weekly insights */}
+        <Section title="Trends & insights">
+          <Field label="">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={insightsEnabled} onChange={(e) => setInsightsEnabled(e.target.checked)}
+                className="w-4 h-4 accent-stone-700 dark:accent-stone-400" />
+              <span className="text-sm text-stone-600 dark:text-stone-300">Show mood and energy trends in History</span>
+            </label>
+            {!insightsEnabled && (
+              <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">
+                You can turn this back on anytime.
+              </p>
+            )}
+          </Field>
         </Section>
 
         {/* Groups & sharing */}

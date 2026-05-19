@@ -1,5 +1,6 @@
 import { ValidationError } from '../../lib/errors.js'
 import { ENERGY_LEVELS, MOOD_OPTIONS, DAY_TYPES } from '../../constants/index.js'
+import { bustInsightsCache } from '../insights/insights.service.js'
 import { getEventsForDay } from '../calendar/calendar.service.js'
 import { saveMorningCheckin, findTodayRoutine, createTaskCheckin, createEveningSummary, findEveningSummaryForToday } from './checkin.repository.js'
 import { MorningCheckinDto, MorningCheckinResponse } from './checkin.types.js'
@@ -49,6 +50,9 @@ export async function submitMorningCheckin(
   generateRoutine(userId, date).catch((err) =>
     console.error('[checkin] Routine generation failed:', err)
   )
+
+  // Bust insights cache — new checkin data available
+  bustInsightsCache(userId).catch(() => null)
 
   return {
     routineId: String(routine._id),
