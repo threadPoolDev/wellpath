@@ -1,0 +1,46 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches:
+      - main
+      - 'feat/**'
+      - 'fix/**'
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  sonarcloud:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history for blame/annotation data
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        # --ignore-scripts skips postinstall (patch-metro) — not needed for analysis
+        run: npm ci --ignore-scripts
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=wellpath
+            -Dsonar.organization=wellpath-org
+            -Dsonar.sources=apps/web/src,apps/api/src,apps/mobile/src,packages
+            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/.expo/**,**/build/**,**/*.d.ts,**/coverage/**
+            -Dsonar.javascript.lcov.reportPaths=
+            -Dsonar.coverage.exclusions=**/*
