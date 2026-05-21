@@ -24,3 +24,4 @@ Props: `name`, `photoUrl?`, `thumbnailUrl?`, `size: sm|md|lg`, `variant: full|th
 |---|---|---|
 | 2026-05-16 | feat/project-scaffold | Directory created |
 | 2026-05-16 | feat/profile-photo | Avatar.tsx |
+| 2026-05-21 | feat/compassionate-streak | TopBar.tsx: flame icon 🔥 + streak count + StreakPanel integration |

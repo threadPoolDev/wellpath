@@ -13,6 +13,8 @@ import { globalRateLimiter } from './middleware/rateLimiter.js'
 import { openapiSpec } from './docs/openapi.js'
 import { startNotificationWorker } from './lib/queue.js'
 import { configureWebPush, processNotificationJob } from './features/notifications/notification.service.js'
+import { runNightlyStreakUpdate } from './features/streak/streak.service.js'
+import cron from 'node-cron'
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -73,6 +75,16 @@ configureWebPush()
 connectDB()
   .then(() => {
     startNotificationWorker(processNotificationJob)
+
+    // Nightly streak update — runs at 23:59 server time
+    // Each user's timezone offset is handled inside the service
+    cron.schedule('59 23 * * *', () => {
+      console.log('[cron] Running nightly streak update')
+      runNightlyStreakUpdate().catch((err) =>
+        console.error('[cron] Streak update failed:', err)
+      )
+    })
+
     app.listen(PORT, () => {
       console.log(`WellPath API running on port ${PORT} [${process.env.NODE_ENV ?? 'development'}]`)
     })

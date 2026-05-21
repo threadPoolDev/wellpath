@@ -1,8 +1,6 @@
 import {
-  LineChart,
   Line,
   Area,
-  AreaChart,
   XAxis,
   ResponsiveContainer,
   Tooltip,

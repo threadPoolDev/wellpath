@@ -34,7 +34,7 @@ function CreateGroupForm({ onCreated, onBack }: { onCreated: (g: Group) => void;
     setEmailStatus('checking')
     setFoundName('')
 
-    debounceRef.current && clearTimeout(debounceRef.current)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
       try {
         const result = await groupsApi.checkEmail(email)
@@ -49,7 +49,7 @@ function CreateGroupForm({ onCreated, onBack }: { onCreated: (g: Group) => void;
       }
     }, 400)
 
-    return () => { debounceRef.current && clearTimeout(debounceRef.current) }
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [emailInput, invited])
 
   function addEmail() {

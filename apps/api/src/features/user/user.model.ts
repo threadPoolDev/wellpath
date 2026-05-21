@@ -148,6 +148,15 @@ export interface IUser extends Document {
   expoPushToken?: string
   profileEmbedding?: number[]
   insightsEnabled: boolean
+  streak: {
+    current: number
+    personalBest: number
+    lastStreakDate: string | null
+    graceDaysUsedThisWeek: number
+    graceWeekStartDate: string | null
+    totalDaysCompleted: number
+    milestonesSeen: number[]
+  }
 }
 
 const medicineSchema = new Schema<IMedicine>(
@@ -297,6 +306,16 @@ const userSchema = new Schema<IUser>(
     expoPushToken: String,
     profileEmbedding: [Number],
     insightsEnabled: { type: Boolean, default: true },
+    streak: {
+      current: { type: Number, default: 0 },
+      personalBest: { type: Number, default: 0 },
+      lastStreakDate: { type: String, default: null },
+      graceDaysUsedThisWeek: { type: Number, default: 0 },
+      graceWeekStartDate: { type: String, default: null },
+      totalDaysCompleted: { type: Number, default: 0 },
+      milestonesSeen: [{ type: Number }],
+      _id: false,
+    },
   },
   { timestamps: true }
 )

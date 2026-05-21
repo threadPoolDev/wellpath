@@ -264,3 +264,31 @@ export const ENERGY_LEVEL_SCORES: Record<string, number> = {
   medium: 2,
   high: 3,
 }
+
+// ─── Streak ───────────────────────────────────────────────────────────────────
+
+export const STREAK = {
+  /** Minimum completion % on a day for it to count as a streak day */
+  COMPLETION_THRESHOLD_PERCENT: 60,
+  /** Grace days allowed per rolling 7-day window */
+  GRACE_DAYS_PER_WEEK: 1,
+  /** Milestone current-streak counts that trigger a push notification */
+  MILESTONES: [3, 7, 14, 30, 60, 100] as number[],
+} as const
+
+export const STREAK_DAY_STATUSES = [
+  'complete',
+  'grace',
+  'missed',
+  'future',
+  'pending',
+] as const
+
+export const STREAK_MILESTONE_COPY: Record<number, string> = {
+  3: "Three days in. The hardest part is starting — you've done that.",
+  7: "A full week. You're building something real.",
+  14: 'Two weeks. This is becoming yours.',
+  30: "A month of showing up. That's not a streak — that's a habit.",
+  60: 'Two months. Most people never get here.',
+  100: "One hundred days. You're extraordinary.",
+}

@@ -1,7 +1,7 @@
 import { User } from '../user/user.model.js'
 import { Routine } from '../routine/routine.model.js'
 import { NotFoundError, ForbiddenError, ValidationError } from '../../lib/errors.js'
-import { PRIVATE_TASK_CATEGORIES, GROUP_INVITE_EXPIRY_DAYS } from '../../constants/index.js'
+import { PRIVATE_TASK_CATEGORIES } from '../../constants/index.js'
 import {
   createGroup,
   findGroupById,

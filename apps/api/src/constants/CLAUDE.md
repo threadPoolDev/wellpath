@@ -16,3 +16,4 @@ All backend enums and static values. Single source of truth — used in schemas,
 | Date | PR | What was added |
 |---|---|---|
 | 2026-05-16 | feat/project-scaffold | Full constants from planning doc |
+| 2026-05-21 | feat/compassionate-streak | STREAK, STREAK_DAY_STATUSES, STREAK_MILESTONE_COPY |
