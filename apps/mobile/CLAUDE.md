@@ -43,3 +43,4 @@ Expo SDK 52 React Native app for WellPath. File-based routing via Expo Router. N
 | 2026-05-19 | feat/mobile-travel-settings | Settings screen, travel mode sheet stub |
 | 2026-05-19 | feat/mobile-offline-polish | Offline banner, offline-first QueryClient, NetInfo, local medicine notifications |
 | 2026-05-19 | fix | Downgraded SDK-55 packages to SDK-52 compatible; patched metro-cache exports |
+| 2026-05-21 | fix/expo-web-bundling | babel.config.js: explicit expoRouterBabelPlugin (hasModule('expo-router') false in monorepo); app.json: output changed static→single (SSR + React 18/19 version conflict) |
