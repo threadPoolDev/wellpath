@@ -7,11 +7,21 @@ const workspaceRoot = path.resolve(projectRoot, '../..')
 
 const config = getDefaultConfig(projectRoot)
 
-// Watch monorepo packages so Metro picks up changes in packages/
-config.watchFolders = [workspaceRoot]
+// Only watch packages/ so Metro never traverses root node_modules.
+//
+// Watching the entire workspaceRoot caused Metro to discover and attempt
+// to transpile root node_modules files (react-native@0.85.x with JS `match`
+// syntax, react-native-screens Fabric TypeScript, React 19 JSX shape, etc.)
+// even though those packages are not the ones used by the mobile app.
+// Limiting watchFolders to packages/ gives Metro visibility into the shared
+// workspace packages (constants, types, api-client, store) without exposing
+// root node_modules. Module resolution is still handled by nodeModulesPaths.
+config.watchFolders = [
+  path.resolve(workspaceRoot, 'packages'),
+]
 
 // Resolve modules from the mobile app's node_modules first, then the
-// workspace root's node_modules (hoisted packages)
+// workspace root's node_modules (hoisted packages).
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
@@ -31,26 +41,6 @@ config.resolver.extraNodeModules = {
   'react':        path.resolve(projectRoot, 'node_modules/react'),
   'react-dom':    path.resolve(projectRoot, 'node_modules/react-dom'),
   'react-native': path.resolve(projectRoot, 'node_modules/react-native'),
-}
-
-// Exclude root node_modules copies of react/react-native from Metro's file
-// graph entirely. watchFolders includes the workspace root so Metro discovers
-// these files, but without blockList it will still try to parse/bundle them,
-// hitting the `match` syntax in RN 0.85.x (Hermes can't parse it) and the
-// React 19 JSX shape. extraNodeModules overrides resolution; blockList
-// prevents the root copies from being traversed at all.
-//
-// Note: metro-config in this monorepo does not export `exclusionList` —
-// blockList accepts a RegExp or array of RegExps directly.
-const rootNM = path.resolve(workspaceRoot, 'node_modules')
-config.resolver.blockList = [
-  new RegExp(`^${escapeRegex(path.join(rootNM, 'react-native'))}[/\\\\].*$`),
-  new RegExp(`^${escapeRegex(path.join(rootNM, 'react') + path.sep)}.*$`),
-  new RegExp(`^${escapeRegex(path.join(rootNM, 'react-dom'))}[/\\\\].*$`),
-]
-
-function escapeRegex(str) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 module.exports = withNativeWind(config, { input: './global.css' })
