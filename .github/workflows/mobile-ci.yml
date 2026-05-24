@@ -1,0 +1,68 @@
+name: Mobile CI
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/**'
+  pull_request:
+    branches: ['main']
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/**'
+
+jobs:
+  type-check:
+    name: Type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Type check (packages/constants)
+        run: npx tsc --noEmit
+        working-directory: packages/constants
+
+      - name: Type check (packages/types)
+        run: npx tsc --noEmit
+        working-directory: packages/types
+
+      - name: Type check (packages/api-client)
+        run: npx tsc --noEmit
+        working-directory: packages/api-client
+
+      - name: Type check (mobile)
+        run: npm run type-check --workspace=@wellpath/mobile
+
+  export:
+    name: Expo export
+    runs-on: ubuntu-latest
+    needs: type-check
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Patch metro-cache exports
+        run: node scripts/patch-metro.js
+
+      - name: Install Expo CLI
+        run: npm install -g @expo/cli
+
+      - name: Export (all platforms)
+        run: npx expo export --platform all
+        working-directory: apps/mobile

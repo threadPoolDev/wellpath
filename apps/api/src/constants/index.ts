@@ -244,3 +244,83 @@ export const TRAVEL_TIME = {
 
 export const GROUP_INVITE_EXPIRY_DAYS = 7
 export const GROUP_ACTIVITY_NOTIFICATION_HOUR = 20
+
+// ─── Insights ─────────────────────────────────────────────────────────────────
+
+export const INSIGHT_TYPES = ['pattern', 'positive', 'observation', 'weekly_summary'] as const
+
+export const INSIGHT_CATEGORIES = ['energy', 'completion', 'meetings', 'exercise'] as const
+
+export const INSIGHT_CACHE_TTL_HOURS = 24
+
+export const INSIGHTS_MIN_DATA_DAYS = 3
+
+export const INSIGHTS_LOOKBACK_DAYS = 30
+
+export const MOOD_GRAPH_DAYS = 14
+
+export const ENERGY_LEVEL_SCORES: Record<string, number> = {
+  low: 1,
+  medium: 2,
+  high: 3,
+}
+
+// ─── Streak ───────────────────────────────────────────────────────────────────
+
+export const STREAK = {
+  /** Minimum completion % on a day for it to count as a streak day */
+  COMPLETION_THRESHOLD_PERCENT: 60,
+  /** Grace days allowed per rolling 7-day window */
+  GRACE_DAYS_PER_WEEK: 1,
+  /** Milestone current-streak counts that trigger a push notification */
+  MILESTONES: [3, 7, 14, 30, 60, 100] as number[],
+} as const
+
+export const STREAK_DAY_STATUSES = [
+  'complete',
+  'grace',
+  'missed',
+  'future',
+  'pending',
+] as const
+
+export const STREAK_MILESTONE_COPY: Record<number, string> = {
+  3: "Three days in. The hardest part is starting — you've done that.",
+  7: "A full week. You're building something real.",
+  14: 'Two weeks. This is becoming yours.',
+  30: "A month of showing up. That's not a streak — that's a habit.",
+  60: 'Two months. Most people never get here.',
+  100: "One hundred days. You're extraordinary.",
+}
+
+// ─── Weekly Reflection ────────────────────────────────────────────────────────
+
+export const WEEKLY_REFLECTION_RATINGS = [
+  'exhausting',
+  'tough',
+  'okay',
+  'good',
+  'great',
+] as const
+
+export const WEEKLY_REFLECTION_TIMINGS = ['sunday_evening', 'monday_morning'] as const
+
+export const WEEKLY_REFLECTION_DAY_TYPES = [
+  'light',
+  'moderate',
+  'packed',
+  'very_packed',
+] as const
+
+export const WEEKLY_REFLECTION = {
+  /** How many days in advance the week preview covers */
+  PREVIEW_DAYS: 5,
+  /** Minimum free time (minutes) for a day to NOT be classified as very_packed */
+  VERY_PACKED_MIN_FREE_MINUTES: 60,
+  /** Meeting count threshold for very_packed */
+  VERY_PACKED_MEETING_COUNT: 5,
+  /** Sunday notification hour (user local time) */
+  SUNDAY_NOTIFICATION_HOUR: 19,
+  /** Monday reminder hour (user local time) */
+  MONDAY_REMINDER_HOUR: 7,
+} as const

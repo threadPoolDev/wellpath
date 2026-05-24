@@ -1,5 +1,4 @@
 # Local-only planning and context files
-**/CLAUDE.md
 PLANNING.md
 
 # Dependencies
@@ -25,6 +24,12 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Mobile — Expo build artifacts and generated native projects
+apps/mobile/.expo
+apps/mobile/ios
+apps/mobile/android
+apps/mobile/dist
 
 # Logs
 *.log

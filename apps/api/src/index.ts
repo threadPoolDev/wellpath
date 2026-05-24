@@ -13,6 +13,9 @@ import { globalRateLimiter } from './middleware/rateLimiter.js'
 import { openapiSpec } from './docs/openapi.js'
 import { startNotificationWorker } from './lib/queue.js'
 import { configureWebPush, processNotificationJob } from './features/notifications/notification.service.js'
+import { runNightlyStreakUpdate } from './features/streak/streak.service.js'
+import { runWeeklyReflectionNotifications } from './features/weekly/weekly.service.js'
+import cron from 'node-cron'
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -73,6 +76,25 @@ configureWebPush()
 connectDB()
   .then(() => {
     startNotificationWorker(processNotificationJob)
+
+    // Nightly streak update — runs at 23:59 server time
+    // Each user's timezone offset is handled inside the service
+    cron.schedule('59 23 * * *', () => {
+      console.log('[cron] Running nightly streak update')
+      runNightlyStreakUpdate().catch((err) =>
+        console.error('[cron] Streak update failed:', err)
+      )
+    })
+
+    // Weekly reflection notifications — runs every hour to check who needs Sunday/Monday nudge
+    // The service itself checks if it's the right hour+day in each user's timezone
+    cron.schedule('0 * * * *', () => {
+      console.log('[cron] Checking weekly reflection notifications')
+      runWeeklyReflectionNotifications().catch((err) =>
+        console.error('[cron] Weekly reflection notifications failed:', err)
+      )
+    })
+
     app.listen(PORT, () => {
       console.log(`WellPath API running on port ${PORT} [${process.env.NODE_ENV ?? 'development'}]`)
     })

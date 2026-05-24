@@ -27,6 +27,9 @@ export function SettingsPage() {
   const [waterReminder, setWaterReminder] = useState(false)
   const [shareWithGroups, setShareWithGroups] = useState(true)
   const [sharingPreference, setSharingPreference] = useState('completion_only')
+  const [insightsEnabled, setInsightsEnabled] = useState(true)
+  const [weeklyReflectionEnabled, setWeeklyReflectionEnabled] = useState(true)
+  const [weeklyReflectionTiming, setWeeklyReflectionTiming] = useState<'sunday_evening' | 'monday_morning'>('sunday_evening')
   const [medicines, setMedicines] = useState<Medicine[]>([])
 
   useEffect(() => {
@@ -42,6 +45,9 @@ export function SettingsPage() {
       setWaterReminder(p.profile.diet?.waterReminderNeeded ?? false)
       setShareWithGroups(p.groupSharingDefaults?.shareWithGroups ?? true)
       setSharingPreference(p.groupSharingDefaults?.defaultSharingPreference ?? 'completion_only')
+      setInsightsEnabled(p.insightsEnabled ?? true)
+      setWeeklyReflectionEnabled(p.weeklyReflectionEnabled ?? true)
+      setWeeklyReflectionTiming(p.weeklyReflectionTiming ?? 'sunday_evening')
       setMedicines(p.profile.health?.medicines ?? [])
     }).catch(() => null).finally(() => setLoading(false))
   }, [])
@@ -58,6 +64,9 @@ export function SettingsPage() {
         diet: { type: dietType, waterReminderNeeded: waterReminder },
         medicines,
         groupSharingDefaults: { shareWithGroups, defaultSharingPreference: sharingPreference },
+        insightsEnabled,
+        weeklyReflectionEnabled,
+        weeklyReflectionTiming,
       }
       const updated = await settingsApi.updateProfile(payload)
       setProfile(updated)
@@ -235,6 +244,59 @@ export function SettingsPage() {
             className="w-full py-3 rounded-xl border border-dashed border-stone-300 dark:border-stone-600 text-sm text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
             + Add medicine
           </button>
+        </Section>
+
+        {/* Weekly insights */}
+        <Section title="Trends & insights">
+          <Field label="">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={insightsEnabled} onChange={(e) => setInsightsEnabled(e.target.checked)}
+                className="w-4 h-4 accent-stone-700 dark:accent-stone-400" />
+              <span className="text-sm text-stone-600 dark:text-stone-300">Show mood and energy trends in History</span>
+            </label>
+            {!insightsEnabled && (
+              <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">
+                You can turn this back on anytime.
+              </p>
+            )}
+          </Field>
+        </Section>
+
+        {/* Weekly ritual */}
+        <Section title="Weekly ritual">
+          <Field label="">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={weeklyReflectionEnabled} onChange={(e) => setWeeklyReflectionEnabled(e.target.checked)}
+                className="w-4 h-4 accent-stone-700 dark:accent-stone-400" />
+              <span className="text-sm text-stone-600 dark:text-stone-300">Sunday/Monday week check-in</span>
+            </label>
+            {!weeklyReflectionEnabled && (
+              <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">
+                You can turn this back on anytime.
+              </p>
+            )}
+          </Field>
+          {weeklyReflectionEnabled && (
+            <Field label="Remind me">
+              <div className="flex gap-3">
+                {(['sunday_evening', 'monday_morning'] as const).map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setWeeklyReflectionTiming(opt)}
+                    className={[
+                      'flex-1 py-2 px-3 rounded-xl border text-sm font-medium transition-colors',
+                      weeklyReflectionTiming === opt
+                        ? 'bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 border-stone-800 dark:border-stone-200'
+                        : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-800',
+                    ].join(' ')}
+                  >
+                    {opt === 'sunday_evening' ? 'Sunday evening' : 'Monday morning'}
+                  </button>
+                ))}
+              </div>
+            </Field>
+          )}
         </Section>
 
         {/* Groups & sharing */}

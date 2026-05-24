@@ -21,7 +21,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
   try {
     const { user, token } = await authService.register(req.body)
     setAuthCookie(res, token)
-    sendCreated(res, { user })
+    sendCreated(res, { user, token })
   } catch (err) {
     next(err)
   }
@@ -31,7 +31,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
   try {
     const { user, token } = await authService.login(req.body)
     setAuthCookie(res, token)
-    sendSuccess(res, { user })
+    sendSuccess(res, { user, token })
   } catch (err) {
     next(err)
   }
@@ -54,8 +54,14 @@ export function logout(_req: Request, res: Response): void {
 export function oauthCallback(req: Request, res: Response): void {
   const oauthUser = req.user!
   const token = authService.generateToken(oauthUser.userId, oauthUser.email)
-  setAuthCookie(res, token)
 
+  // Mobile OAuth: redirect to deep link so the app can capture the token
+  if (req.cookies?.oauth_mobile === '1') {
+    res.clearCookie('oauth_mobile')
+    return void res.redirect(`wellpath://auth/callback?token=${token}`)
+  }
+
+  setAuthCookie(res, token)
   const webUrl = process.env.WEB_URL ?? 'http://localhost:5173'
   res.redirect(`${webUrl}/auth/callback`)
 }

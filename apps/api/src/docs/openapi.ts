@@ -120,6 +120,7 @@ export const openapiSpec: OpenAPIV3.Document = {
     { name: 'Check-in',    description: 'Morning check-in' },
     { name: 'Routine',       description: 'Daily routine & task status' },
     { name: 'Notifications', description: 'Web Push subscription management' },
+    { name: 'Insights',     description: 'Mood/energy trends and AI-generated insight cards' },
   ],
 
   paths: {
@@ -834,6 +835,78 @@ export const openapiSpec: OpenAPIV3.Document = {
         security: [{ cookieAuth: [] }],
         responses: {
           '204': { description: 'Subscription removed' },
+          '401': r401,
+        },
+      },
+    },
+
+    // ── Insights ──────────────────────────────────────────────────────────────
+
+    '/insights/trends': {
+      get: {
+        tags: ['Insights'],
+        summary: 'Get AI-generated insight cards',
+        description: 'Returns cached AI pattern analysis of last 30 days of check-in data. Returns { disabled: true } if insightsEnabled is off. Returns { insights: [] } if fewer than 3 days of data.',
+        security: [{ cookieAuth: [] }],
+        responses: {
+          '200': {
+            description: 'Insight cards (possibly empty)',
+            content: {
+              'application/json': {
+                schema: SuccessWrapper({
+                  type: 'object',
+                  properties: {
+                    generatedAt: { type: 'string', format: 'date-time' },
+                    insights: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          id:       { type: 'string' },
+                          type:     { type: 'string', enum: ['pattern', 'positive', 'observation', 'weekly_summary'] },
+                          category: { type: 'string', enum: ['energy', 'completion', 'meetings', 'exercise'] },
+                          title:    { type: 'string' },
+                          body:     { type: 'string' },
+                        },
+                      },
+                    },
+                    disabled: { type: 'boolean', description: 'Present and true when insightsEnabled is false' },
+                  },
+                }),
+              },
+            },
+          },
+          '401': r401,
+        },
+      },
+    },
+
+    '/insights/mood-graph': {
+      get: {
+        tags: ['Insights'],
+        summary: 'Get 14-day mood and energy graph data',
+        description: 'Returns last 14 days of energy level (1–3), mood, and completion % for the line chart. Null values indicate days with no check-in.',
+        security: [{ cookieAuth: [] }],
+        responses: {
+          '200': {
+            description: '14 data points',
+            content: {
+              'application/json': {
+                schema: SuccessWrapper({
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      date:                { type: 'string', example: '2026-05-16' },
+                      energyLevel:         { type: 'number', nullable: true, description: 'low=1, medium=2, high=3. null if no check-in.' },
+                      mood:                { type: 'string', nullable: true },
+                      completionPercentage:{ type: 'number', nullable: true },
+                    },
+                  },
+                }),
+              },
+            },
+          },
           '401': r401,
         },
       },

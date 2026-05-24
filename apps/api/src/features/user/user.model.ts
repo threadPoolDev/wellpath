@@ -26,6 +26,7 @@ import {
   PHYSICAL_MOVEMENT_OPTIONS,
   CALENDAR_PROVIDERS,
   SHARING_PREFERENCES,
+  WEEKLY_REFLECTION_TIMINGS,
 } from '../../constants/index.js'
 
 export interface IMedicine {
@@ -145,7 +146,20 @@ export interface IUser extends Document {
     endpoint: string
     keys: { p256dh: string; auth: string }
   }
+  expoPushToken?: string
   profileEmbedding?: number[]
+  insightsEnabled: boolean
+  weeklyReflectionEnabled: boolean
+  weeklyReflectionTiming: (typeof WEEKLY_REFLECTION_TIMINGS)[number]
+  streak: {
+    current: number
+    personalBest: number
+    lastStreakDate: string | null
+    graceDaysUsedThisWeek: number
+    graceWeekStartDate: string | null
+    totalDaysCompleted: number
+    milestonesSeen: number[]
+  }
 }
 
 const medicineSchema = new Schema<IMedicine>(
@@ -292,7 +306,25 @@ const userSchema = new Schema<IUser>(
       keys: { p256dh: String, auth: String, _id: false },
       _id: false,
     },
+    expoPushToken: String,
     profileEmbedding: [Number],
+    insightsEnabled: { type: Boolean, default: true },
+    weeklyReflectionEnabled: { type: Boolean, default: true },
+    weeklyReflectionTiming: {
+      type: String,
+      enum: WEEKLY_REFLECTION_TIMINGS,
+      default: 'sunday_evening',
+    },
+    streak: {
+      current: { type: Number, default: 0 },
+      personalBest: { type: Number, default: 0 },
+      lastStreakDate: { type: String, default: null },
+      graceDaysUsedThisWeek: { type: Number, default: 0 },
+      graceWeekStartDate: { type: String, default: null },
+      totalDaysCompleted: { type: Number, default: 0 },
+      milestonesSeen: [{ type: Number }],
+      _id: false,
+    },
   },
   { timestamps: true }
 )

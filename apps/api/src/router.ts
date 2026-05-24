@@ -8,6 +8,9 @@ import { checkinRouter } from './features/checkin/checkin.routes.js'
 import { routineRouter } from './features/routine/routine.routes.js'
 import { notificationsRouter } from './features/notifications/notification.routes.js'
 import { groupsRouter } from './features/groups/groups.routes.js'
+import { insightsRouter } from './features/insights/insights.routes.js'
+import { streakRouter } from './features/streak/streak.routes.js'
+import { weeklyRouter } from './features/weekly/weekly.routes.js'
 
 const router = Router()
 
@@ -46,5 +49,14 @@ router.use('/notifications', notificationsRouter)
 
 // PR #17 — feat/groups-backend
 router.use('/groups', groupsRouter)
+
+// PR #20 — feat/mood-energy-trends
+router.use('/insights', insightsRouter)
+
+// PR #21 — feat/compassionate-streak
+router.use('/streak', streakRouter)
+
+// PR #22 — feat/weekly-reset-ritual
+router.use('/weekly-reflection', weeklyRouter)
 
 export { router }
