@@ -17,4 +17,12 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ]
 
+// Force react-native to always resolve from mobile's node_modules (0.76.x).
+// Without this, packages in root node_modules that transitively require
+// react-native pull in root's 0.85.x which uses JS `match` expressions
+// unsupported by Expo SDK 52's Hermes parser.
+config.resolver.extraNodeModules = {
+  'react-native': path.resolve(projectRoot, 'node_modules/react-native'),
+}
+
 module.exports = withNativeWind(config, { input: './global.css' })

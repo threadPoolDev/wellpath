@@ -33,3 +33,4 @@ Primary daily view. Thin `Dashboard.tsx` orchestrates data; all content rendered
 | 2026-05-19 | feat/adhoc-meetings | MeetingCard, AddMeetingForm; task time enforcement |
 | 2026-05-19 | feat/app-shell-navigation | Decomposed into panel components |
 | 2026-05-19 | fix/evening-summary-and-nav-overflow | BUG-02: evening summary as full replacement; BUG-03: server-side status check |
+| 2026-05-24 | feat/weekly-reset-ritual | Monday banner; WeeklyResetFlow wired in; `getWeekStartDate` helper |

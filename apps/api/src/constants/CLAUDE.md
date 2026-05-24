@@ -17,3 +17,4 @@ All backend enums and static values. Single source of truth — used in schemas,
 |---|---|---|
 | 2026-05-16 | feat/project-scaffold | Full constants from planning doc |
 | 2026-05-21 | feat/compassionate-streak | STREAK, STREAK_DAY_STATUSES, STREAK_MILESTONE_COPY |
+| 2026-05-24 | feat/weekly-reset-ritual | WEEKLY_REFLECTION_RATINGS, WEEKLY_REFLECTION_TIMINGS, WEEKLY_REFLECTION_DAY_TYPES, WEEKLY_REFLECTION |

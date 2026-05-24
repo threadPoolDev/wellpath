@@ -28,3 +28,4 @@ User schema and profile management. The most complex model in the system — nes
 | 2026-05-16 | feat/database-setup | Full User schema with all subdocuments |
 | 2026-05-16 | feat/profile-photo | user.types.ts, user.repository.ts, user.service.ts, user.controller.ts, user.routes.ts |
 | 2026-05-21 | feat/compassionate-streak | user.model.ts: `streak` subdocument added (current, personalBest, lastStreakDate, graceDays, milestonesSeen) |
+| 2026-05-24 | feat/weekly-reset-ritual | user.model.ts: `weeklyReflectionEnabled` and `weeklyReflectionTiming` fields added |

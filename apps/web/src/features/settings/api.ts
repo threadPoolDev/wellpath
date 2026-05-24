@@ -29,6 +29,8 @@ export interface UserProfile {
   }
   profilePhoto?: { url: string; thumbnailUrl: string }
   insightsEnabled?: boolean
+  weeklyReflectionEnabled?: boolean
+  weeklyReflectionTiming?: 'sunday_evening' | 'monday_morning'
 }
 
 export interface UpdateProfilePayload {
@@ -51,6 +53,8 @@ export interface UpdateProfilePayload {
     shareWithGroups?: boolean
   }
   insightsEnabled?: boolean
+  weeklyReflectionEnabled?: boolean
+  weeklyReflectionTiming?: 'sunday_evening' | 'monday_morning'
 }
 
 export const settingsApi = {

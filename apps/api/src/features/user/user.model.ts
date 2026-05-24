@@ -26,6 +26,7 @@ import {
   PHYSICAL_MOVEMENT_OPTIONS,
   CALENDAR_PROVIDERS,
   SHARING_PREFERENCES,
+  WEEKLY_REFLECTION_TIMINGS,
 } from '../../constants/index.js'
 
 export interface IMedicine {
@@ -148,6 +149,8 @@ export interface IUser extends Document {
   expoPushToken?: string
   profileEmbedding?: number[]
   insightsEnabled: boolean
+  weeklyReflectionEnabled: boolean
+  weeklyReflectionTiming: (typeof WEEKLY_REFLECTION_TIMINGS)[number]
   streak: {
     current: number
     personalBest: number
@@ -306,6 +309,12 @@ const userSchema = new Schema<IUser>(
     expoPushToken: String,
     profileEmbedding: [Number],
     insightsEnabled: { type: Boolean, default: true },
+    weeklyReflectionEnabled: { type: Boolean, default: true },
+    weeklyReflectionTiming: {
+      type: String,
+      enum: WEEKLY_REFLECTION_TIMINGS,
+      default: 'sunday_evening',
+    },
     streak: {
       current: { type: Number, default: 0 },
       personalBest: { type: Number, default: 0 },

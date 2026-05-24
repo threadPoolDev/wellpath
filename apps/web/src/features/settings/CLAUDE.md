@@ -21,3 +21,4 @@ Settings page — profile management, calendar connections, medicines, sleep/exe
 |---|---|---|
 | 2026-05-19 | feat/settings | SettingsPage with all sections |
 | 2026-05-19 | feat/mood-energy-trends | insightsEnabled toggle added to settings |
+| 2026-05-24 | feat/weekly-reset-ritual | weeklyReflectionEnabled + weeklyReflectionTiming fields added to api.ts and SettingsPage |

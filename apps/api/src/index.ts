@@ -14,6 +14,7 @@ import { openapiSpec } from './docs/openapi.js'
 import { startNotificationWorker } from './lib/queue.js'
 import { configureWebPush, processNotificationJob } from './features/notifications/notification.service.js'
 import { runNightlyStreakUpdate } from './features/streak/streak.service.js'
+import { runWeeklyReflectionNotifications } from './features/weekly/weekly.service.js'
 import cron from 'node-cron'
 
 const app = express()
@@ -82,6 +83,15 @@ connectDB()
       console.log('[cron] Running nightly streak update')
       runNightlyStreakUpdate().catch((err) =>
         console.error('[cron] Streak update failed:', err)
+      )
+    })
+
+    // Weekly reflection notifications — runs every hour to check who needs Sunday/Monday nudge
+    // The service itself checks if it's the right hour+day in each user's timezone
+    cron.schedule('0 * * * *', () => {
+      console.log('[cron] Checking weekly reflection notifications')
+      runWeeklyReflectionNotifications().catch((err) =>
+        console.error('[cron] Weekly reflection notifications failed:', err)
       )
     })
 

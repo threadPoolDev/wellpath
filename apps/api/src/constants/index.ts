@@ -292,3 +292,35 @@ export const STREAK_MILESTONE_COPY: Record<number, string> = {
   60: 'Two months. Most people never get here.',
   100: "One hundred days. You're extraordinary.",
 }
+
+// ─── Weekly Reflection ────────────────────────────────────────────────────────
+
+export const WEEKLY_REFLECTION_RATINGS = [
+  'exhausting',
+  'tough',
+  'okay',
+  'good',
+  'great',
+] as const
+
+export const WEEKLY_REFLECTION_TIMINGS = ['sunday_evening', 'monday_morning'] as const
+
+export const WEEKLY_REFLECTION_DAY_TYPES = [
+  'light',
+  'moderate',
+  'packed',
+  'very_packed',
+] as const
+
+export const WEEKLY_REFLECTION = {
+  /** How many days in advance the week preview covers */
+  PREVIEW_DAYS: 5,
+  /** Minimum free time (minutes) for a day to NOT be classified as very_packed */
+  VERY_PACKED_MIN_FREE_MINUTES: 60,
+  /** Meeting count threshold for very_packed */
+  VERY_PACKED_MEETING_COUNT: 5,
+  /** Sunday notification hour (user local time) */
+  SUNDAY_NOTIFICATION_HOUR: 19,
+  /** Monday reminder hour (user local time) */
+  MONDAY_REMINDER_HOUR: 7,
+} as const

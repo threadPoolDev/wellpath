@@ -8,6 +8,8 @@ import { NotFoundError, ValidationError } from '../../lib/errors.js'
 import { Types } from 'mongoose'
 import { scheduleNotificationsForRoutine, scheduleMorningCheckinReminder } from '../notifications/notification.service.js'
 import { computeUserActivityForToday } from '../groups/groups.service.js'
+import { getReflectionForWeek } from '../weekly/weekly.service.js'
+import { format, startOfWeek } from 'date-fns'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,7 +27,8 @@ function buildPrompt(
   user: IUser,
   dayEvents: Awaited<ReturnType<typeof getEventsForDay>>,
   checkin: { energyLevel: string; mood: string; anythingDifferentToday?: string },
-  medicineAnchors: string[]
+  medicineAnchors: string[],
+  weeklyContext?: { lastWeekRating: string | null; oneIntention: string | null } | null
 ): string {
   const profile = user.profile
   const workStart = profile?.commute?.homeToOfficeTime ?? '09:00'
@@ -84,6 +87,8 @@ Today (${dayEvents.date}):
   Mood: ${checkin.mood}
   Day type: ${dayEvents.dayType} (${dayEvents.totalMeetingMinutes} min in meetings, ${dayEvents.totalFreeMinutes} min free)
 ${checkin.anythingDifferentToday ? `  Note: ${checkin.anythingDifferentToday}` : ''}
+${weeklyContext ? `  Weekly intention: "${weeklyContext.oneIntention ?? 'not specified'}" (last week felt: ${weeklyContext.lastWeekRating ?? 'unknown'})` : ''}
+${weeklyContext && (weeklyContext.lastWeekRating === 'exhausting' || weeklyContext.lastWeekRating === 'tough') ? '  Note: This is Monday and the user had a hard last week — favour a lighter, more restorative routine today.' : ''}
 
 Calendar today:
 ${calendarBlock}
@@ -375,6 +380,21 @@ export async function generateRoutine(userId: string, date: string): Promise<IRo
   const workStart = user.profile?.commute?.homeToOfficeTime ?? '09:00'
   const workEnd = user.profile?.commute?.officeToHomeTime ?? '18:00'
 
+  // On Mondays, inject weekly reflection context into prompt
+  const dateObj = new Date(date)
+  const isMonday = dateObj.getDay() === 1
+  let weeklyContext: { lastWeekRating: string | null; oneIntention: string | null } | null = null
+  if (isMonday) {
+    // Last week's Monday
+    const lastMonday = format(startOfWeek(new Date(date + 'T00:00:00'), { weekStartsOn: 1 }), 'yyyy-MM-dd')
+    // Previous week's Monday = 7 days before this Monday
+    const prevMonday = format(
+      new Date(new Date(lastMonday).getTime() - 7 * 24 * 60 * 60 * 1000),
+      'yyyy-MM-dd'
+    )
+    weeklyContext = await getReflectionForWeek(userId, prevMonday).catch(() => null)
+  }
+
   const isAIConfigured =
     process.env.USE_LOCAL_AI === 'true'
       ? !!process.env.OLLAMA_BASE_URL
@@ -384,7 +404,7 @@ export async function generateRoutine(userId: string, date: string): Promise<IRo
 
   if (isAIConfigured) {
     try {
-      const prompt = buildPrompt(user, dayEvents, checkin, anchors)
+      const prompt = buildPrompt(user, dayEvents, checkin, anchors, weeklyContext)
       aiTasks = await generateTasksFromAI(prompt)
     } catch (err) {
       console.error('[routine] AI generation failed, using fallback:', err)
@@ -399,7 +419,7 @@ export async function generateRoutine(userId: string, date: string): Promise<IRo
 
   // Build prompt snapshot — exclude all medicine/medical data
   const safeSnapshot = isAIConfigured
-    ? buildPrompt(user, dayEvents, checkin, anchors)
+    ? buildPrompt(user, dayEvents, checkin, anchors, weeklyContext)
     : 'fallback_routine'
 
   const savedRoutine = await saveRoutine(userId, date, {

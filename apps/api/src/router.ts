@@ -10,6 +10,7 @@ import { notificationsRouter } from './features/notifications/notification.route
 import { groupsRouter } from './features/groups/groups.routes.js'
 import { insightsRouter } from './features/insights/insights.routes.js'
 import { streakRouter } from './features/streak/streak.routes.js'
+import { weeklyRouter } from './features/weekly/weekly.routes.js'
 
 const router = Router()
 
@@ -54,5 +55,8 @@ router.use('/insights', insightsRouter)
 
 // PR #21 — feat/compassionate-streak
 router.use('/streak', streakRouter)
+
+// PR #22 — feat/weekly-reset-ritual
+router.use('/weekly-reflection', weeklyRouter)
 
 export { router }
