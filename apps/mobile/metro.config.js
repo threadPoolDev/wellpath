@@ -43,4 +43,32 @@ config.resolver.extraNodeModules = {
   'react-native': path.resolve(projectRoot, 'node_modules/react-native'),
 }
 
+// Block root node_modules copies of packages that conflict with mobile's
+// pinned versions. nodeModulesPaths + extraNodeModules handle resolution to
+// the correct mobile copies; blockList ensures the root copies are never
+// bundled even if the resolver somehow reaches them.
+//
+// Root conflicts identified from package-lock.json:
+//   react@19.2.6          (mobile needs 18.3.1)
+//   react-dom@19.2.6      (mobile needs 18.3.1)
+//   react-native@0.85.3   (mobile needs 0.76.3 — root uses `match` syntax)
+//   react-native-screens@4.25.1  (mobile needs ~4.1.0 — root has Fabric TS)
+//
+// Note: metro-config does not export `exclusionList` in this monorepo —
+// blockList accepts a RegExp or array of RegExps directly.
+const rootNM = path.resolve(workspaceRoot, 'node_modules')
+const BLOCKED_ROOT_PACKAGES = [
+  'react',
+  'react-dom',
+  'react-native',
+  'react-native-screens',
+]
+config.resolver.blockList = BLOCKED_ROOT_PACKAGES.map(
+  (pkg) => new RegExp(`^${escapeRegex(path.join(rootNM, pkg))}[/\\\\].*$`)
+)
+
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 module.exports = withNativeWind(config, { input: './global.css' })
