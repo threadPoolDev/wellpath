@@ -1,5 +1,6 @@
 const { getDefaultConfig } = require('expo/metro-config')
 const { withNativeWind } = require('nativewind/metro')
+const { exclusionList } = require('metro-config')
 const path = require('path')
 
 const projectRoot = __dirname
@@ -31,6 +32,23 @@ config.resolver.extraNodeModules = {
   'react':        path.resolve(projectRoot, 'node_modules/react'),
   'react-dom':    path.resolve(projectRoot, 'node_modules/react-dom'),
   'react-native': path.resolve(projectRoot, 'node_modules/react-native'),
+}
+
+// Exclude root node_modules copies of react/react-native from Metro's file
+// graph entirely. watchFolders includes the workspace root so Metro discovers
+// these files, but without blockList it will still try to parse/bundle them,
+// hitting the `match` syntax in RN 0.85.x (Hermes can't parse it) and the
+// React 19 JSX shape. extraNodeModules overrides resolution; blockList
+// prevents the root copies from being traversed at all.
+const rootNM = path.resolve(workspaceRoot, 'node_modules')
+config.resolver.blockList = exclusionList([
+  new RegExp(`^${escapeRegex(path.join(rootNM, 'react-native'))}[\\/].*$`),
+  new RegExp(`^${escapeRegex(path.join(rootNM, 'react', ''))}.*$`),
+  new RegExp(`^${escapeRegex(path.join(rootNM, 'react-dom'))}[\\/].*$`),
+])
+
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 module.exports = withNativeWind(config, { input: './global.css' })
