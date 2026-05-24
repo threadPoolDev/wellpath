@@ -45,3 +45,4 @@ Expo SDK 52 React Native app for WellPath. File-based routing via Expo Router. N
 | 2026-05-19 | fix | Downgraded SDK-55 packages to SDK-52 compatible; patched metro-cache exports |
 | 2026-05-21 | fix/expo-web-bundling | babel.config.js: explicit expoRouterBabelPlugin (hasModule('expo-router') false in monorepo); app.json: output changed static→single (SSR + React 18/19 version conflict) |
 | 2026-05-24 | fix/metro-rn-version | metro.config.js: added `resolver.extraNodeModules` to force react-native → mobile's node_modules/react-native@0.76.3; prevents root node_modules/react-native@0.85.3 (uses JS `match` syntax) from being picked up by Metro |
+| 2026-05-24 | fix/metro-react-version | metro.config.js: also pinned `react` and `react-dom` in extraNodeModules → mobile's React 18.3.1; root has React 19.2.6 (hoisted by web app) whose JSX elements have no `ref` field, causing React 18 reconciler to throw "Objects are not valid as a React child" |

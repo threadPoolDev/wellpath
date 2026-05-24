@@ -17,11 +17,19 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ]
 
-// Force react-native to always resolve from mobile's node_modules (0.76.x).
-// Without this, packages in root node_modules that transitively require
-// react-native pull in root's 0.85.x which uses JS `match` expressions
+// Force critical packages to always resolve from mobile's node_modules.
+//
+// Root node_modules has React 19.x (hoisted by web/API packages) while
+// Expo SDK 52 + React Native 0.76 requires React 18.x. If Metro uses
+// React 19 for any package, its JSX elements get $$typeof from React 19
+// which React 18's reconciler can't recognise → "Objects are not valid
+// as a React child" crash on web and device.
+//
+// react-native: root has 0.85.x which uses JS `match` expressions
 // unsupported by Expo SDK 52's Hermes parser.
 config.resolver.extraNodeModules = {
+  'react':        path.resolve(projectRoot, 'node_modules/react'),
+  'react-dom':    path.resolve(projectRoot, 'node_modules/react-dom'),
   'react-native': path.resolve(projectRoot, 'node_modules/react-native'),
 }
 
