@@ -1,6 +1,5 @@
 const { getDefaultConfig } = require('expo/metro-config')
 const { withNativeWind } = require('nativewind/metro')
-const { exclusionList } = require('metro-config')
 const path = require('path')
 
 const projectRoot = __dirname
@@ -40,12 +39,15 @@ config.resolver.extraNodeModules = {
 // hitting the `match` syntax in RN 0.85.x (Hermes can't parse it) and the
 // React 19 JSX shape. extraNodeModules overrides resolution; blockList
 // prevents the root copies from being traversed at all.
+//
+// Note: metro-config in this monorepo does not export `exclusionList` —
+// blockList accepts a RegExp or array of RegExps directly.
 const rootNM = path.resolve(workspaceRoot, 'node_modules')
-config.resolver.blockList = exclusionList([
-  new RegExp(`^${escapeRegex(path.join(rootNM, 'react-native'))}[\\/].*$`),
-  new RegExp(`^${escapeRegex(path.join(rootNM, 'react', ''))}.*$`),
-  new RegExp(`^${escapeRegex(path.join(rootNM, 'react-dom'))}[\\/].*$`),
-])
+config.resolver.blockList = [
+  new RegExp(`^${escapeRegex(path.join(rootNM, 'react-native'))}[/\\\\].*$`),
+  new RegExp(`^${escapeRegex(path.join(rootNM, 'react') + path.sep)}.*$`),
+  new RegExp(`^${escapeRegex(path.join(rootNM, 'react-dom'))}[/\\\\].*$`),
+]
 
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

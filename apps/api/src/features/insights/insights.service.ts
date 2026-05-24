@@ -38,8 +38,6 @@ export interface MoodGraphDay {
 
 // ─── Safe categories only — no medicine/family ────────────────────────────────
 
-const SAFE_CATEGORIES = ['hydration', 'exercise', 'nutrition', 'focus_work', 'break', 'commute', 'wind_down', 'learning', 'social', 'mindfulness'] as const
-
 function isSafeCategory(cat: string): boolean {
   return !(PRIVATE_TASK_CATEGORIES as readonly string[]).includes(cat)
 }
