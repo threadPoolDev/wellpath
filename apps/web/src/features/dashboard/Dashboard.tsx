@@ -49,7 +49,8 @@ export function Dashboard() {
       // Show Monday banner when: it is Monday AND weekly reflection not yet submitted this week
       // AND not already dismissed by the user today
       const isMonday = now.getDay() === 1
-      if (isMonday && weeklyStatus && !weeklyStatus.exists) {
+      // weeklyStatus is { exists: false } when no reflection exists, or WeeklyReflectionData (no exists prop) otherwise
+      if (isMonday && weeklyStatus && !('weekStartDate' in weeklyStatus)) {
         const mondayKey = `weekly_reflection_dismissed:${getWeekStartDate(now)}`
         const dismissed = localStorage.getItem(mondayKey)
         if (!dismissed) {
