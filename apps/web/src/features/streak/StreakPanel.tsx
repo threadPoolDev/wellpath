@@ -77,8 +77,10 @@ export function StreakPanel({ isOpen, onClose }: Props) {
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {isLoading ? (
             <StreakPanelSkeleton />
-          ) : data ? (
+          ) : data && Array.isArray(data.last30Days) ? (
             <StreakPanelContent data={data} />
+          ) : data ? (
+            <StreakPanelSkeleton />
           ) : (
             <p className="text-stone-500 dark:text-stone-400 text-sm">
               Couldn't load streak data. Try again later.
