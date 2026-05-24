@@ -17,5 +17,6 @@ export interface StreakData {
 }
 
 export async function fetchStreak(): Promise<StreakData> {
-  return apiClient('/streak')
+  const res = await apiClient.get<{ data: StreakData }>('/streak')
+  return res.data.data
 }

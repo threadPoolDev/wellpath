@@ -24,7 +24,7 @@ function formatDateLabel(date: string): string {
 
 export function StreakCalendar({ days }: Props) {
   // Pad to exactly 30 days so we always render 5 rows × 7 cols (show last 35 slots)
-  const display = days.slice(-30)
+  const display = (days ?? []).slice(-30)
 
   return (
     <div className="mt-4">
